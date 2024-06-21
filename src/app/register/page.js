@@ -27,7 +27,7 @@ function Home() {
         setMessage(data.message); // Postavite poruku za prikaz na stranici
       } else {
         const error = await response.json();
-        alert(error.error); // Prikažite grešku ako postoji problem s registracijom
+        setMessage(error.error); // Postavite poruku o grešci za prikaz na stranici 
       }
     } catch (error) {
       console.error("Došlo je do greške prilikom registracije:", error);
