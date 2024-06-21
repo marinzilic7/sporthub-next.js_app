@@ -49,10 +49,11 @@ function Login() {
     };
 
     return (
+       <div className='backgroundImg d-flex align-items-center'>
         <div className="container">
-            <h1 className="text-center mt-5">Prijava</h1>
-            <div className="mt-3 d-flex justify-content-center">
-                <form className="bg-light shadow-lg col-12 col-md-6 col-sm-6 col-lg-5 p-4 mt-3" onSubmit={handleSubmit}>
+            <div className=" d-flex justify-content-center align-items-center">
+                <form className=" z-3 bg-light shadow-lg col-12 col-md-6 col-sm-6 col-lg-5 p-4 mt-3" onSubmit={handleSubmit}>
+                <h1 className="text-center">Prijava</h1>
                     <div className="mb-3">
                         <label htmlFor="exampleInputEmail1" className="form-label">
                             Email adresa
@@ -86,12 +87,14 @@ function Login() {
                     <p className="text-center mt-3">
                         Nemate račun? <span><a href="/register" className="text-underline">Registriraj se</a></span>
                     </p>
-                    <p className="text-center"><a href="">Pogledaj kao gost</a></p>
+                    <p className="text-center"><a href="/home">Pogledaj kao gost</a></p>
                     {error && <div className="alert alert-danger">{error}</div>}
                     {message && <p className="text-center alert alert-info mt-3">{message}</p>}
                 </form>
             </div>
         </div>
+       </div>
+        
     );
 }
 
