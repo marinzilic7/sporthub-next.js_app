@@ -34,7 +34,8 @@ function Login() {
                     id: data.user._id,
                     firstName: data.user.firstName,
                     lastName: data.user.lastName,
-                    email: data.user.email
+                    email: data.user.email,
+                    role:data.user.role
                 }));
 
                 router.push('/home'); // Preusmjeravanje na /home nakon uspješne prijave

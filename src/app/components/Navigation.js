@@ -98,6 +98,16 @@ function Navigation() {
                         Odjava
                       </a>
                     </li>
+                    <li className="nav-item">
+                      <a className="nav-link" href="/account">
+                        Profil
+                      </a>
+                    </li>
+                    <li className="nav-item">
+                      <a className="nav-link" href="/admin">
+                        Administracija
+                      </a>
+                    </li>
                   </ul>
                 </div>
               ) : (
