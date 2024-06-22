@@ -7,6 +7,8 @@ import Footer from "../components/Footer";
 const Admin = () => {
   const router = useRouter();
   const [users, setUsers] = useState([]);
+  const [categoryName, setCategoryName] = useState("");
+  const [categories, setCategories] = useState([]);
 
   useEffect(() => {
     const fetchUsers = async () => {
@@ -29,23 +31,99 @@ const Admin = () => {
   const handleDeleteUser = async (userId) => {
     try {
       const response = await fetch(`/api/users`, {
-        method: 'POST',
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({ userId }),
       });
-  
+
       if (response.ok) {
         setUsers(users.filter((user) => user._id !== userId));
-        alert('Korisnik uspješno izbrisan');
+        alert("Korisnik uspješno izbrisan");
       } else {
         const errorData = await response.json();
         throw new Error(errorData.message);
       }
     } catch (error) {
-      console.error('Greška prilikom brisanja korisnika:', error.message);
+      console.error("Greška prilikom brisanja korisnika:", error.message);
     }
+  };
+
+  const handleDeleteCategory = async (categoryId) => {
+    try {
+      const response = await fetch(`/api/categories?categoryId=${categoryId}`, {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+  
+      if (response.ok) {
+        const data = await response.json();
+        alert(data.message); // Prikaz poruke ako je kategorija uspješno izbrisana
+        setCategories(categories.filter((category) => category._id !== categoryId));
+        
+      } else {
+        const errorData = await response.json();
+        throw new Error(errorData.message);
+      }
+    } catch (error) {
+      console.error("Greška prilikom brisanja kategorije:", error.message);
+      // Ovdje možete obraditi grešku brisanja kategorije
+    }
+  };
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const response = await fetch("/api/categories");
+        if (!response.ok) {
+          throw new Error("Neuspješan zahtjev za dohvaćanjem korisnika");
+        }
+        const data = await response.json();
+        setCategories(data); // Postavljamo dohvaćene korisnike u state
+      } catch (error) {
+        console.error("Greška prilikom dohvata korisnika:", error);
+        // Ovdje možete obraditi grešku, npr. prikazati poruku korisniku
+      }
+    };
+
+    fetchCategories();
+  }, []);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      const response = await fetch("/api/categories", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ categoryName }),
+      });
+  
+      if (!response.ok) {
+        throw new Error(`HTTP error! Status: ${response.status}`);
+      }
+  
+      const data = await response.json();
+      console.log("Response data:", data);
+  
+      // Provjerite da li je vraćen validan objekt kategorije
+      if (data.result && data.result.insertedId) {
+        setCategories((prevCategories) => [
+          ...prevCategories,
+          { _id: data.result.insertedId, name: categoryName }, // Dodajte novu kategoriju u stanje
+        ]);
+        alert("Kategorija je uspješno dodana");
+      } else {
+        throw new Error("Podaci o kategoriji nisu pravilno vraćeni");
+      }
+    } catch (error) {
+      console.error("Greška prilikom dodavanja kategorije:", error.message);
+      // Ovdje možete obraditi grešku dodavanja kategorije
+    }
+    setCategoryName(""); // Resetiranje stanja categoryName nakon dodavanja
   };
 
   useEffect(() => {
@@ -100,37 +178,39 @@ const Admin = () => {
               data-bs-parent="#accordionFlushExample"
             >
               <div class="accordion-body">
-                <table className="table table-striped">
-                  <thead>
-                    <tr>
-                      <th>ID</th>
-                      <th>Ime</th>
-                      <th>Prezime</th>
-                      <th>Email</th>
-                      <th>Uloga</th>
-                      <th>Akcije</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {users.map((user) => (
-                      <tr key={user._id}>
-                        <td>{user._id}</td>
-                        <td>{user.firstName}</td>
-                        <td>{user.lastName}</td>
-                        <td>{user.email}</td>
-                        <td>{user.role}</td>
-                        <td>
-                          <button
-                            class="btn btn-sm btn-outline-danger"
-                            onClick={() => handleDeleteUser(user._id)}
-                          >
-                            Izbrisi
-                          </button>
-                        </td>
+                <div class="table-responsive">
+                  <table className="table table-striped">
+                    <thead>
+                      <tr>
+                        <th>ID</th>
+                        <th>Ime</th>
+                        <th>Prezime</th>
+                        <th>Email</th>
+                        <th>Uloga</th>
+                        <th>Akcije</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody>
+                      {users.map((user) => (
+                        <tr key={user._id}>
+                          <td>{user._id}</td>
+                          <td>{user.firstName}</td>
+                          <td>{user.lastName}</td>
+                          <td>{user.email}</td>
+                          <td>{user.role}</td>
+                          <td>
+                            <button
+                              class="btn btn-sm btn-outline-danger"
+                              onClick={() => handleDeleteUser(user._id)}
+                            >
+                              Izbrisi
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
               </div>
             </div>
           </div>
@@ -153,10 +233,53 @@ const Admin = () => {
               data-bs-parent="#accordionFlushExample"
             >
               <div class="accordion-body">
-                Placeholder content for this accordion, which is intended to
-                demonstrate the <code>.accordion-flush</code> class. This is the
-                second item's accordion body. Let's imagine this being filled
-                with some actual content.
+                <div class="table-responsive">
+                  <table className="table table-striped">
+                    <thead>
+                      <tr>
+                        <th>ID</th>
+                        <th>Ime</th>
+                        <th>Akcije</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {categories.map((category) => (
+                        <tr key={category._id}>
+                          <td>{category._id}</td>
+                          <td>{category.name}</td>
+                          <td>
+                            <button
+                              class="btn btn-sm btn-outline-danger"
+                              onClick={() => handleDeleteCategory(category._id)}
+                            >
+                              Izbrisi
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+                <hr />
+                <h5 className="text-center mt-3">Dodaj kategoriju</h5>
+                <form onSubmit={handleSubmit}>
+                  <div class="input-group input-group-sm mb-3 mt-3">
+                    <span class="input-group-text" id="inputGroup-sizing-sm">
+                      Ime Kategorije
+                    </span>
+                    <input
+                      type="text"
+                      class="form-control"
+                      aria-label="Sizing example input"
+                      aria-describedby="inputGroup-sizing-sm"
+                      value={categoryName}
+                      onChange={(e) => setCategoryName(e.target.value)}
+                    />
+                  </div>
+                  <button type="submit" className="btn btn-primary btn-sm">
+                    Dodaj kategoriju
+                  </button>
+                </form>
               </div>
             </div>
           </div>
