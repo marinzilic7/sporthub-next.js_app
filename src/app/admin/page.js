@@ -11,6 +11,15 @@ const Admin = () => {
   const [categories, setCategories] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [newCategoryName, setNewCategoryName] = useState("");
+  const [genders, setGenders] = useState([]);
+
+  const [itemName, setItemName] = useState("");
+  const [itemSize, setItemSize] = useState("");
+  const [itemPrice, setItemPrice] = useState("");
+  const [selectedGender, setSelectedGender] = useState("");
+  const [selectedCategoryForItem, setSelectedCategoryForItem] = useState("");
+  // const [selectedUser, setSelectedUser] = useState("");
+  const [itemImage, setItemImage] = useState(null);
 
   useEffect(() => {
     const fetchUsers = async () => {
@@ -198,6 +207,60 @@ const Admin = () => {
     checkAdminAccess();
   }, [router]);
 
+  useEffect(() => {
+    const fetchGenders = async () => {
+      try {
+        const response = await fetch("/api/gender");
+        if (!response.ok) {
+          throw new Error("Neuspješan zahtjev za dohvaćanjem spola");
+        }
+        const data = await response.json();
+        setGenders(data); // Postavljamo dohvaćene korisnike u state
+      } catch (error) {
+        console.error("Greška prilikom dohvata spola:", error);
+        // Ovdje možete obraditi grešku, npr. prikazati poruku korisniku
+      }
+    };
+
+    fetchGenders();
+  }, []);
+
+  const handleItemSubmit = async (e) => {
+    e.preventDefault();
+    const formData = new FormData();
+    formData.append("name", itemName);
+    formData.append("size", itemSize);
+    formData.append("price", itemPrice);
+    formData.append("category_id", selectedCategoryForItem);
+    formData.append("gender_id", selectedGender);
+    // formData.append("user_id", selectedUser);
+    formData.append("image", itemImage);
+
+    try {
+      const response = await fetch("/api/items", {
+        method: "POST",
+        body: formData,
+      });
+
+      if (response.ok) {
+        alert("Artikl je uspješno dodan");
+      } else {
+        throw new Error("Greška prilikom dodavanja artikla");
+      }
+    } catch (error) {
+      console.error("Greška prilikom dodavanja artikla:", error.message);
+    }
+
+    // Reset form fields
+    setItemName("");
+    setItemSize("");
+    setItemPrice("");
+    setSelectedCategoryForItem("");
+    setSelectedGender("");
+    // setSelectedUser("");
+    setItemImage(null);
+  };
+
   return (
     <div>
       <Navigation />
@@ -382,7 +445,7 @@ const Admin = () => {
                       data-bs-parent="#accordionFlushExample"
                     >
                       <div class="accordion-body">
-                        <form>
+                        <form onSubmit={handleItemSubmit}>
                           <div class="input-group input-group-sm mb-3 mt-3">
                             <span
                               class="input-group-text"
@@ -395,6 +458,8 @@ const Admin = () => {
                               class="form-control"
                               aria-label="Sizing example input"
                               aria-describedby="inputGroup-sizing-sm"
+                              value={itemName}
+                              onChange={(e) => setItemName(e.target.value)}
                             />
                           </div>
                           <div class="input-group input-group-sm mb-3 mt-3">
@@ -409,6 +474,8 @@ const Admin = () => {
                               class="form-control"
                               aria-label="Sizing example input"
                               aria-describedby="inputGroup-sizing-sm"
+                              value={itemSize}
+                              onChange={(e) => setItemSize(e.target.value)}
                             />
                           </div>
                           <div class="input-group input-group-sm mb-3 mt-3">
@@ -423,6 +490,8 @@ const Admin = () => {
                               class="form-control"
                               aria-label="Sizing example input"
                               aria-describedby="inputGroup-sizing-sm"
+                              value={itemPrice}
+                              onChange={(e) => setItemPrice(e.target.value)}
                             />
                           </div>
                           <div class="input-group input-group-sm mb-3 mt-3">
@@ -435,11 +504,17 @@ const Admin = () => {
                             <select
                               class="form-select form-select-sm"
                               aria-label=".form-select-sm example"
+                              value={selectedCategoryForItem}
+                              onChange={(e) =>
+                                setSelectedCategoryForItem(e.target.value)
+                              }
                             >
-                              <option selected>Open this select menu</option>
-                              <option value="1">One</option>
-                              <option value="2">Two</option>
-                              <option value="3">Three</option>
+                              <option selected>Odaberi kategoriju</option>
+                              {categories.map((category) => (
+                                <option key={category._id} value={category._id}>
+                                  {category.name}
+                                </option>
+                              ))}
                             </select>
                           </div>
                           <div class="input-group input-group-sm mb-3 mt-3">
@@ -452,11 +527,17 @@ const Admin = () => {
                             <select
                               class="form-select form-select-sm"
                               aria-label=".form-select-sm example"
+                              value={selectedGender}
+                              onChange={(e) =>
+                                setSelectedGender(e.target.value)
+                              }
                             >
-                              <option selected>Open this select menu</option>
-                              <option value="1">One</option>
-                              <option value="2">Two</option>
-                              <option value="3">Three</option>
+                              <option selected>Odaberi</option>
+                              {genders.map((gender) => (
+                                <option key={gender._id} value={gender._id}>
+                                  {gender.name}
+                                </option>
+                              ))}
                             </select>
                           </div>
                           <div class="input-group input-group-sm mb-3 mt-3">
@@ -469,10 +550,12 @@ const Admin = () => {
                             <div>
                               <input
                                 class="form-control form-control-sm"
-                                id="formFileSm"
+                                id="itemImage"
+                                onChange={(e) =>
+                                  setItemImage(e.target.files[0])
+                                }
                                 type="file"
                               />
-                             
                             </div>
                           </div>
                           <button
