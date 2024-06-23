@@ -9,6 +9,8 @@ const Admin = () => {
   const [users, setUsers] = useState([]);
   const [categoryName, setCategoryName] = useState("");
   const [categories, setCategories] = useState([]);
+  const [selectedCategory, setSelectedCategory] = useState(null);
+  const [newCategoryName, setNewCategoryName] = useState("");
 
   useEffect(() => {
     const fetchUsers = async () => {
@@ -58,12 +60,13 @@ const Admin = () => {
           "Content-Type": "application/json",
         },
       });
-  
+
       if (response.ok) {
         const data = await response.json();
         alert(data.message); // Prikaz poruke ako je kategorija uspješno izbrisana
-        setCategories(categories.filter((category) => category._id !== categoryId));
-        
+        setCategories(
+          categories.filter((category) => category._id !== categoryId)
+        );
       } else {
         const errorData = await response.json();
         throw new Error(errorData.message);
@@ -101,14 +104,14 @@ const Admin = () => {
         },
         body: JSON.stringify({ categoryName }),
       });
-  
+
       if (!response.ok) {
         throw new Error(`HTTP error! Status: ${response.status}`);
       }
-  
+
       const data = await response.json();
       console.log("Response data:", data);
-  
+
       // Provjerite da li je vraćen validan objekt kategorije
       if (data.result && data.result.insertedId) {
         setCategories((prevCategories) => [
@@ -124,6 +127,51 @@ const Admin = () => {
       // Ovdje možete obraditi grešku dodavanja kategorije
     }
     setCategoryName(""); // Resetiranje stanja categoryName nakon dodavanja
+  };
+
+  const handleEditCategory = (category) => {
+    setSelectedCategory(category);
+    setNewCategoryName(category.name);
+    new bootstrap.Modal(document.getElementById("editCategoryModal")).show();
+  };
+
+  const handleUpdateCategory = async (e) => {
+    e.preventDefault();
+    // Update category logic here
+    // Example:
+    try {
+      const response = await fetch(
+        `/api/categories?categoryId=${selectedCategory._id}`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ name: newCategoryName }),
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! Status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      setCategories((prevCategories) =>
+        prevCategories.map((category) =>
+          category._id === selectedCategory._id
+            ? { ...category, name: newCategoryName }
+            : category
+        )
+      );
+
+      alert("Kategorija je uspješno ažurirana");
+      const editModal = bootstrap.Modal.getInstance(
+        document.getElementById("editCategoryModal")
+      );
+      editModal.hide();
+    } catch (error) {
+      console.error("Greška prilikom ažuriranja kategorije:", error.message);
+    }
   };
 
   useEffect(() => {
@@ -239,7 +287,8 @@ const Admin = () => {
                       <tr>
                         <th>ID</th>
                         <th>Ime</th>
-                        <th>Akcije</th>
+                        <th>Izbrisi</th>
+                        <th>Uredi</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -253,6 +302,14 @@ const Admin = () => {
                               onClick={() => handleDeleteCategory(category._id)}
                             >
                               Izbrisi
+                            </button>
+                          </td>
+                          <td>
+                            <button
+                              class="btn btn-sm btn-outline-primary"
+                              onClick={() => handleEditCategory(category)}
+                            >
+                              Uredi
                             </button>
                           </td>
                         </tr>
@@ -302,13 +359,177 @@ const Admin = () => {
               data-bs-parent="#accordionFlushExample"
             >
               <div class="accordion-body">
-                Placeholder content for this accordion, which is intended to
-                demonstrate the <code>.accordion-flush</code> class. This is the
-                third item's accordion body. Nothing more exciting happening
-                here in terms of content, but just filling up the space to make
-                it look, at least at first glance, a bit more representative of
-                how this would look in a real-world application.
+                <div
+                  class="accordion accordion-flush"
+                  id="accordionFlushExample"
+                >
+                  <div class="accordion-item">
+                    <h2 class="accordion-header">
+                      <button
+                        class="accordion-button collapsed"
+                        type="button"
+                        data-bs-toggle="collapse"
+                        data-bs-target="#flush-collapseFour"
+                        aria-expanded="false"
+                        aria-controls="flush-collapseFour"
+                      >
+                        Dodaj artikl
+                      </button>
+                    </h2>
+                    <div
+                      id="flush-collapseFour"
+                      class="accordion-collapse collapse"
+                      data-bs-parent="#accordionFlushExample"
+                    >
+                      <div class="accordion-body">
+                        <form>
+                          <div class="input-group input-group-sm mb-3 mt-3">
+                            <span
+                              class="input-group-text"
+                              id="inputGroup-sizing-sm"
+                            >
+                              Ime artikla
+                            </span>
+                            <input
+                              type="text"
+                              class="form-control"
+                              aria-label="Sizing example input"
+                              aria-describedby="inputGroup-sizing-sm"
+                            />
+                          </div>
+                          <div class="input-group input-group-sm mb-3 mt-3">
+                            <span
+                              class="input-group-text"
+                              id="inputGroup-sizing-sm"
+                            >
+                              Veličina artikla
+                            </span>
+                            <input
+                              type="text"
+                              class="form-control"
+                              aria-label="Sizing example input"
+                              aria-describedby="inputGroup-sizing-sm"
+                            />
+                          </div>
+                          <div class="input-group input-group-sm mb-3 mt-3">
+                            <span
+                              class="input-group-text"
+                              id="inputGroup-sizing-sm"
+                            >
+                              Cijena artikla
+                            </span>
+                            <input
+                              type="text"
+                              class="form-control"
+                              aria-label="Sizing example input"
+                              aria-describedby="inputGroup-sizing-sm"
+                            />
+                          </div>
+                          <div class="input-group input-group-sm mb-3 mt-3">
+                            <span
+                              class="input-group-text"
+                              id="inputGroup-sizing-sm"
+                            >
+                              Kategorija
+                            </span>
+                            <select
+                              class="form-select form-select-sm"
+                              aria-label=".form-select-sm example"
+                            >
+                              <option selected>Open this select menu</option>
+                              <option value="1">One</option>
+                              <option value="2">Two</option>
+                              <option value="3">Three</option>
+                            </select>
+                          </div>
+                          <div class="input-group input-group-sm mb-3 mt-3">
+                            <span
+                              class="input-group-text"
+                              id="inputGroup-sizing-sm"
+                            >
+                              Namjenjeno za
+                            </span>
+                            <select
+                              class="form-select form-select-sm"
+                              aria-label=".form-select-sm example"
+                            >
+                              <option selected>Open this select menu</option>
+                              <option value="1">One</option>
+                              <option value="2">Two</option>
+                              <option value="3">Three</option>
+                            </select>
+                          </div>
+                          <div class="input-group input-group-sm mb-3 mt-3">
+                            <span
+                              class="input-group-text"
+                              id="inputGroup-sizing-sm"
+                            >
+                              Slika
+                            </span>
+                            <div>
+                              <input
+                                class="form-control form-control-sm"
+                                id="formFileSm"
+                                type="file"
+                              />
+                             
+                            </div>
+                          </div>
+                          <button
+                            type="submit"
+                            className="btn btn-primary btn-sm"
+                          >
+                            Dodaj artikl
+                          </button>
+                        </form>
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      {/* Edit Category Modal */}
+      <div
+        className="modal fade"
+        id="editCategoryModal"
+        tabIndex="-1"
+        aria-labelledby="editCategoryModalLabel"
+        aria-hidden="true"
+      >
+        <div className="modal-dialog">
+          <div className="modal-content">
+            <div className="modal-header">
+              <h5 className="modal-title" id="editCategoryModalLabel">
+                Uredi Kategoriju
+              </h5>
+              <button
+                type="button"
+                className="btn-close"
+                data-bs-dismiss="modal"
+                aria-label="Close"
+              ></button>
+            </div>
+            <div className="modal-body">
+              <form onSubmit={handleUpdateCategory}>
+                <div className="mb-3">
+                  <label htmlFor="categoryName" className="form-label">
+                    Ime Kategorije
+                  </label>
+                  <input
+                    type="text"
+                    className="form-control"
+                    id="categoryName"
+                    value={newCategoryName}
+                    onChange={(e) => setNewCategoryName(e.target.value)}
+                  />
+                </div>
+                <button type="submit" className="btn btn-primary">
+                  Spremi promjene
+                </button>
+              </form>
             </div>
           </div>
         </div>
