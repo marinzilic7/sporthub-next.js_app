@@ -3,8 +3,12 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Navigation from "../components/Navigation";
 import Footer from "../components/Footer";
-
+import { bottom } from "@popperjs/core";
+import { Familjen_Grotesk } from "next/font/google";
+import useSWR from 'swr';
 const Admin = () => {
+  const fetcher = (url) => fetch(url).then((res) => res.json());
+  const { data, error, mutate } = useSWR('/api/items', fetcher);
   const router = useRouter();
   const [users, setUsers] = useState([]);
   const [categoryName, setCategoryName] = useState("");
@@ -18,8 +22,27 @@ const Admin = () => {
   const [itemPrice, setItemPrice] = useState("");
   const [selectedGender, setSelectedGender] = useState("");
   const [selectedCategoryForItem, setSelectedCategoryForItem] = useState("");
+
   // const [selectedUser, setSelectedUser] = useState("");
   const [itemImage, setItemImage] = useState(null);
+
+  //UREDIVANJE ARTIKLA
+  const [editingItem, setEditingItem] = useState(null);
+  const [editItemName, setEditItemName] = useState("");
+  const [editItemSize, setEditItemSize] = useState("");
+  const [editItemPrice, setEditItemPrice] = useState("");
+  const [editItemCategoryId, setEditItemCategoryId] = useState("");
+  const [editItemGenderId, setEditItemGenderId] = useState("");
+
+  const [items, setItems] = useState([]);
+
+  const [newItem, setNewItem] = useState({
+    name: "",
+    size: "",
+    price: "",
+    category_id: "",
+    gender_id: "",
+  });
 
   useEffect(() => {
     const fetchUsers = async () => {
@@ -243,6 +266,20 @@ const Admin = () => {
       });
 
       if (response.ok) {
+        const newItem = await response.json();
+        const categoryName =
+          categories.find((category) => category._id === newItem.category_id)
+            ?.name || "Unknown";
+        const genderName =
+          genders.find((gender) => gender._id === newItem.gender_id)?.name ||
+          "Unknown";
+
+        // Dodaj nova polja u novi artikl
+        newItem.category_name = categoryName;
+        newItem.gender_name = genderName;
+
+        setItems((prevItems) => [...prevItems, newItem]);
+
         alert("Artikl je uspješno dodan");
       } else {
         throw new Error("Greška prilikom dodavanja artikla");
@@ -261,6 +298,97 @@ const Admin = () => {
     setItemImage(null);
   };
 
+  const handleItem = async (itemId) => {
+    try {
+      const response = await fetch(`/api/items?itemId=${itemId}`, {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        alert(data.message);
+        setItems(items.filter((item) => item._id !== itemId));
+      } else {
+        const errorData = await response.json();
+        throw new Error(errorData.message);
+      }
+    } catch (error) {
+      console.error("Greška prilikom brisanja kategorije:", error.message);
+    }
+  };
+
+  useEffect(() => {
+    fetch("/api/items")
+      .then((response) => response.json())
+      .then((data) => setItems(data))
+      .catch((error) => console.error("Error fetching items:", error));
+  }, []);
+
+  const handleEditItem = (item) => {
+    setEditingItem(item);
+    setEditItemName(item.name); // Postavljamo početno ime artikla u formu
+    setEditItemSize(item.size);
+    setEditItemPrice(item.price);
+    setEditItemCategoryId(item.category_id);
+    setEditItemGenderId(item.gender_id);
+
+    new bootstrap.Modal(document.getElementById("editModalItem")).show();
+  };
+  const handleSaveName = async (e) => {
+    e.preventDefault();
+
+    try {
+      const response = await fetch(`/api/items?itemId=${editingItem._id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          name: editItemName,
+          size: editItemSize,
+          price: editItemPrice,
+          category_id: editItemCategoryId,
+          gender_id: editItemGenderId,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! Status: ${response.status}`);
+      }
+
+     
+
+      setItems((prevItems) =>
+        prevItems.map((item) =>
+          item._id === editingItem._id
+            ? {
+                ...item,
+                name: editItemName,
+                size: editItemSize,
+                price: editItemPrice,
+                category_id: editItemCategoryId,
+                gender_id: editItemGenderId,
+                
+              }
+            : item
+        )
+      );
+
+      alert("Ime artikla uspješno ažurirano");
+      location.reload()
+      const editModal = bootstrap.Modal.getInstance(
+        document.getElementById("editModalItem")
+      );
+      editModal.hide();
+     
+    } catch (error) {
+      console.error("Error updating item:", error);
+    }
+  };
+
   return (
     <div>
       <Navigation />
@@ -270,10 +398,10 @@ const Admin = () => {
           className="accordion accordion-flush shadow-lg mt-5"
           id="accordionFlushExample"
         >
-          <div class="accordion-item">
-            <h2 class="accordion-header">
+          <div className="accordion-item">
+            <h2 className="accordion-header">
               <button
-                class="accordion-button collapsed"
+                className="accordion-button collapsed"
                 type="button"
                 data-bs-toggle="collapse"
                 data-bs-target="#flush-collapseOne"
@@ -285,11 +413,11 @@ const Admin = () => {
             </h2>
             <div
               id="flush-collapseOne"
-              class="accordion-collapse collapse"
+              className="accordion-collapse collapse"
               data-bs-parent="#accordionFlushExample"
             >
-              <div class="accordion-body">
-                <div class="table-responsive">
+              <div className="accordion-body">
+                <div className="table-responsive">
                   <table className="table table-striped">
                     <thead>
                       <tr>
@@ -311,7 +439,7 @@ const Admin = () => {
                           <td>{user.role}</td>
                           <td>
                             <button
-                              class="btn btn-sm btn-outline-danger"
+                              className="btn btn-sm btn-outline-danger"
                               onClick={() => handleDeleteUser(user._id)}
                             >
                               Izbrisi
@@ -325,10 +453,10 @@ const Admin = () => {
               </div>
             </div>
           </div>
-          <div class="accordion-item">
-            <h2 class="accordion-header">
+          <div className="accordion-item">
+            <h2 className="accordion-header">
               <button
-                class="accordion-button collapsed"
+                className="accordion-button collapsed"
                 type="button"
                 data-bs-toggle="collapse"
                 data-bs-target="#flush-collapseTwo"
@@ -340,11 +468,11 @@ const Admin = () => {
             </h2>
             <div
               id="flush-collapseTwo"
-              class="accordion-collapse collapse"
+              className="accordion-collapse collapse"
               data-bs-parent="#accordionFlushExample"
             >
-              <div class="accordion-body">
-                <div class="table-responsive">
+              <div className="accordion-body">
+                <div className="table-responsive">
                   <table className="table table-striped">
                     <thead>
                       <tr>
@@ -361,7 +489,7 @@ const Admin = () => {
                           <td>{category.name}</td>
                           <td>
                             <button
-                              class="btn btn-sm btn-outline-danger"
+                              className="btn btn-sm btn-outline-danger"
                               onClick={() => handleDeleteCategory(category._id)}
                             >
                               Izbrisi
@@ -369,7 +497,7 @@ const Admin = () => {
                           </td>
                           <td>
                             <button
-                              class="btn btn-sm btn-outline-primary"
+                              className="btn btn-sm btn-outline-primary"
                               onClick={() => handleEditCategory(category)}
                             >
                               Uredi
@@ -383,13 +511,16 @@ const Admin = () => {
                 <hr />
                 <h5 className="text-center mt-3">Dodaj kategoriju</h5>
                 <form onSubmit={handleSubmit}>
-                  <div class="input-group input-group-sm mb-3 mt-3">
-                    <span class="input-group-text" id="inputGroup-sizing-sm">
+                  <div className="input-group input-group-sm mb-3 mt-3">
+                    <span
+                      className="input-group-text"
+                      id="inputGroup-sizing-sm"
+                    >
                       Ime Kategorije
                     </span>
                     <input
                       type="text"
-                      class="form-control"
+                      className="form-control"
                       aria-label="Sizing example input"
                       aria-describedby="inputGroup-sizing-sm"
                       value={categoryName}
@@ -403,10 +534,10 @@ const Admin = () => {
               </div>
             </div>
           </div>
-          <div class="accordion-item">
-            <h2 class="accordion-header">
+          <div className="accordion-item">
+            <h2 className="accordion-header">
               <button
-                class="accordion-button collapsed"
+                className="accordion-button collapsed"
                 type="button"
                 data-bs-toggle="collapse"
                 data-bs-target="#flush-collapseThree"
@@ -418,18 +549,63 @@ const Admin = () => {
             </h2>
             <div
               id="flush-collapseThree"
-              class="accordion-collapse collapse"
+              className="accordion-collapse collapse"
               data-bs-parent="#accordionFlushExample"
             >
-              <div class="accordion-body">
+              <div className="accordion-body">
+                <div className="table-responsive">
+                  <table className="table table-bordered">
+                    <thead>
+                      <tr>
+                        <th scope="col">ID</th>
+                        <th scope="col">Ime</th>
+                        <th scope="col">Cijena</th>
+                        <th scope="col">Veličina</th>
+                        <th scope="col">Kategorija</th>
+                        <th scope="col">Spol</th>
+                        <th scope="col">Izbrisi</th>
+                        <th scope="col">Uredi</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {items.map((item) => (
+                        <tr key={item._id}>
+                          <th scope="row">{item._id}</th>
+                          <td>{item.name}</td>
+                          <td>{item.price}</td>
+                          <td>{item.size}</td>
+                          <td>{item.category_name}</td>
+                          <td>{item.gender_name}</td>
+                          <td>
+                            <button
+                              className="btn btn-sm btn-outline-danger "
+                              onClick={() => handleItem(item._id)}
+                            >
+                              Izbrisi
+                            </button>
+                          </td>
+                          <td>
+                            <button
+                              className="btn btn-sm btn-outline-primary"
+                              onClick={() => handleEditItem(item)}
+                            >
+                              Uredi
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+
                 <div
-                  class="accordion accordion-flush"
+                  className="accordion accordion-flush"
                   id="accordionFlushExample"
                 >
-                  <div class="accordion-item">
-                    <h2 class="accordion-header">
+                  <div className="accordion-item">
+                    <h2 className="accordion-header">
                       <button
-                        class="accordion-button collapsed"
+                        className="accordion-button collapsed"
                         type="button"
                         data-bs-toggle="collapse"
                         data-bs-target="#flush-collapseFour"
@@ -441,75 +617,77 @@ const Admin = () => {
                     </h2>
                     <div
                       id="flush-collapseFour"
-                      class="accordion-collapse collapse"
+                      className="accordion-collapse collapse"
                       data-bs-parent="#accordionFlushExample"
                     >
-                      <div class="accordion-body">
+                      <div className="accordion-body">
                         <form onSubmit={handleItemSubmit}>
-                          <div class="input-group input-group-sm mb-3 mt-3">
+                          <div className="input-group input-group-sm mb-3 mt-3">
                             <span
-                              class="input-group-text"
+                              className="input-group-text"
                               id="inputGroup-sizing-sm"
                             >
                               Ime artikla
                             </span>
                             <input
                               type="text"
-                              class="form-control"
+                              className="form-control"
                               aria-label="Sizing example input"
                               aria-describedby="inputGroup-sizing-sm"
                               value={itemName}
                               onChange={(e) => setItemName(e.target.value)}
+                              required
                             />
                           </div>
-                          <div class="input-group input-group-sm mb-3 mt-3">
+                          <div className="input-group input-group-sm mb-3 mt-3">
                             <span
-                              class="input-group-text"
+                              className="input-group-text"
                               id="inputGroup-sizing-sm"
                             >
                               Veličina artikla
                             </span>
                             <input
                               type="text"
-                              class="form-control"
+                              className="form-control"
                               aria-label="Sizing example input"
                               aria-describedby="inputGroup-sizing-sm"
                               value={itemSize}
                               onChange={(e) => setItemSize(e.target.value)}
+                              required
                             />
                           </div>
-                          <div class="input-group input-group-sm mb-3 mt-3">
+                          <div className="input-group input-group-sm mb-3 mt-3">
                             <span
-                              class="input-group-text"
+                              className="input-group-text"
                               id="inputGroup-sizing-sm"
                             >
                               Cijena artikla
                             </span>
                             <input
                               type="text"
-                              class="form-control"
+                              className="form-control"
                               aria-label="Sizing example input"
                               aria-describedby="inputGroup-sizing-sm"
                               value={itemPrice}
                               onChange={(e) => setItemPrice(e.target.value)}
+                              required
                             />
                           </div>
-                          <div class="input-group input-group-sm mb-3 mt-3">
+                          <div className="input-group input-group-sm mb-3 mt-3">
                             <span
-                              class="input-group-text"
+                              className="input-group-text"
                               id="inputGroup-sizing-sm"
                             >
                               Kategorija
                             </span>
                             <select
-                              class="form-select form-select-sm"
+                              className="form-select form-select-sm"
                               aria-label=".form-select-sm example"
                               value={selectedCategoryForItem}
                               onChange={(e) =>
                                 setSelectedCategoryForItem(e.target.value)
                               }
                             >
-                              <option selected>Odaberi kategoriju</option>
                               {categories.map((category) => (
                                 <option key={category._id} value={category._id}>
                                   {category.name}
@@ -517,22 +695,21 @@ const Admin = () => {
                               ))}
                             </select>
                           </div>
-                          <div class="input-group input-group-sm mb-3 mt-3">
+                          <div className="input-group input-group-sm mb-3 mt-3">
                             <span
-                              class="input-group-text"
+                              className="input-group-text"
                               id="inputGroup-sizing-sm"
                             >
                               Namjenjeno za
                             </span>
                             <select
-                              class="form-select form-select-sm"
+                              className="form-select form-select-sm"
                               aria-label=".form-select-sm example"
                               value={selectedGender}
                               onChange={(e) =>
                                 setSelectedGender(e.target.value)
                               }
                             >
-                              <option selected>Odaberi</option>
                               {genders.map((gender) => (
                                 <option key={gender._id} value={gender._id}>
                                   {gender.name}
@@ -540,24 +717,26 @@ const Admin = () => {
                               ))}
                             </select>
                           </div>
-                          <div class="input-group input-group-sm mb-3 mt-3">
+                          <div className="input-group input-group-sm mb-3 mt-3">
                             <span
-                              class="input-group-text"
+                              className="input-group-text"
                               id="inputGroup-sizing-sm"
                             >
                               Slika
                             </span>
                             <div>
                               <input
-                                class="form-control form-control-sm"
+                                className="form-control form-control-sm"
                                 id="itemImage"
                                 onChange={(e) =>
                                   setItemImage(e.target.files[0])
                                 }
                                 type="file"
+                                required
                               />
                             </div>
                           </div>
+
                           <button
                             type="submit"
                             className="btn btn-primary btn-sm"
@@ -617,6 +796,122 @@ const Admin = () => {
           </div>
         </div>
       </div>
+
+      {/* MODAL ZA EDIT ARTIKALA */}
+
+      <div
+        className="modal fade"
+        id="editModalItem"
+        tabIndex="-1"
+        aria-labelledby="exampleModalLabel"
+        aria-hidden="true"
+      >
+        <div className="modal-dialog">
+          <div className="modal-content">
+            <div className="modal-header">
+              <h5 className="modal-title" id="exampleModalLabel">
+                Uredi artikl
+              </h5>
+              <button
+                type="button"
+                className="btn-close"
+                data-bs-dismiss="modal"
+                aria-label="Close"
+              ></button>
+            </div>
+            <div className="modal-body">
+              <form onSubmit={handleSaveName}>
+                <div className="mb-3">
+                  <label htmlFor="editItemName" className="col-form-label">
+                    Ime artikla:
+                  </label>
+                  <input
+                    type="text"
+                    className="form-control"
+                    id="editItemName"
+                    value={editItemName}
+                    onChange={(e) => setEditItemName(e.target.value)}
+                  />
+                </div>
+                <div className="mb-3">
+                  <label htmlFor="editItemSize" className="col-form-label">
+                    Veličina:
+                  </label>
+                  <input
+                    type="text"
+                    className="form-control"
+                    id="editItemSize"
+                    value={editItemSize}
+                    onChange={(e) => setEditItemSize(e.target.value)}
+                  />
+                </div>
+                <div className="mb-3">
+                  <label htmlFor="editItemPrice" className="col-form-label">
+                    Cijena:
+                  </label>
+                  <input
+                    type="number"
+                    className="form-control"
+                    id="editItemPrice"
+                    value={editItemPrice}
+                    onChange={(e) => setEditItemPrice(e.target.value)}
+                  />
+                </div>
+                <div className="mb-3">
+                  <label
+                    htmlFor="editItemCategoryId"
+                    className="col-form-label"
+                  >
+                    Kategorija ID:
+                  </label>
+                  <select
+                    className="form-control"
+                    id="editItemCategoryId"
+                    value={editItemCategoryId}
+                    onChange={(e) => setEditItemCategoryId(e.target.value)}
+                  >
+                    {categories.map((category) => (
+                      <option key={category._id} value={category._id}>
+                        {category.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div className="mb-3">
+                  <label htmlFor="editItemGenderId" className="col-form-label">
+                    Spol ID:
+                  </label>
+                  <select
+                    className="form-control"
+                    id="editItemGenderId"
+                    value={editItemGenderId}
+                    onChange={(e) => setEditItemGenderId(e.target.value)}
+                  >
+                    {genders.map((gender) => (
+                      <option key={gender._id} value={gender._id}>
+                        {gender.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <button type="submit" className="btn btn-primary">
+                  Spremi promjene
+                </button>
+              </form>
+            </div>
+            <div className="modal-footer">
+              <button
+                type="button"
+                className="btn btn-secondary"
+                data-bs-dismiss="modal"
+              >
+                Zatvori
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <Footer />
     </div>
   );
