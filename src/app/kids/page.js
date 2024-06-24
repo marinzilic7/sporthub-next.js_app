@@ -3,14 +3,14 @@ import { useEffect, useState } from "react";
 import Navigation from "../components/Navigation";
 import Footer from "../components/Footer";
 
-export default function Mens() {
+export default function Kids() {
   const [mens, setMens] = useState([]);
   const [error, setError] = useState(null);
 
   useEffect(() => {
     const fetchMensItems = async () => {
       try {
-        const response = await fetch("/api/mens");
+        const response = await fetch("/api/kids");
         if (!response.ok) {
           throw new Error("Failed to fetch items");
         }
