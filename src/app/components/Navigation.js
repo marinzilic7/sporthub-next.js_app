@@ -4,23 +4,42 @@ import "bootstrap/dist/css/bootstrap.min.css";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 function Navigation() {
-  const [currentUser, setCurrentUser] = useState(null); // Stanje za pohranu informacija o prijavljenom korisniku
-  const router = useRouter(); // Ovdje koristimo useRouter unutar funkcionalne komponente
+  const [currentUser, setCurrentUser] = useState(null);
+  const [cartItemCount, setCartItemCount] = useState(0);
+  const router = useRouter();
+
   useEffect(() => {
     // Povlačenje korisničkih podataka iz localStorage-a
     const storedUser = localStorage.getItem("currentUser");
+
+    const userObject = JSON.parse(storedUser);
+    const userId = userObject.id;
     if (storedUser) {
       setCurrentUser(JSON.parse(storedUser));
     }
+
+    // Dohvat broja artikala u košarici
+    const fetchCartItemCount = async () => {
+      try {
+        if (storedUser) {
+          const response = await fetch(`/api/numCart?userId=${userId}`);
+
+          const data = await response.json();
+          setCartItemCount(data);
+          console.log(data);
+        }
+      } catch (error) {
+        console.error("Error fetching cart item count:", error);
+      }
+    };
+
+    fetchCartItemCount();
   }, []);
 
   const handleLogout = () => {
-    // Brisanje sessionToken iz cookie-a i korisničkih podataka iz localStorage-a
     document.cookie =
       "sessionToken=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT;";
     localStorage.removeItem("currentUser");
-
-    // Preusmjeravanje na početnu stranicu nakon odjave
     router.push("/");
   };
 
@@ -73,30 +92,24 @@ function Navigation() {
             <ul className="navbar-nav ms-auto">
               <li className="nav-item">
                 <a href="/cart" className="nav-link text-light">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="32"
-                  height="32"
-                  fill="currentColor"
-                  className="bi bi-cart2 text-light me-4"
-                  viewBox="0 0 16 16"
-                >
-                  <path d="M0 2.5A.5.5 0 0 1 .5 2H2a.5.5 0 0 1 .485.379L2.89 4H14.5a.5.5 0 0 1 .485.621l-1.5 6A.5.5 0 0 1 13 11H4a.5.5 0 0 1-.485-.379L1.61 3H.5a.5.5 0 0 1-.5-.5M3.14 5l1.25 5h8.22l1.25-5zM5 13a1 1 0 1 0 0 2 1 1 0 0 0 0-2m-2 1a2 2 0 1 1 4 0 2 2 0 0 1-4 0m9-1a1 1 0 1 0 0 2 1 1 0 0 0 0-2m-2 1a2 2 0 1 1 4 0 2 2 0 0 1-4 0" />
-                </svg>
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="32"
+                    height="32"
+                    fill="currentColor"
+                    className="bi bi-cart2 text-light me-4"
+                    viewBox="0 0 16 16"
+                  >
+                    <path d="M0 2.5A.5.5 0 0 1 .5 2H2a.5.5 0 0 1 .485.379L2.89 4H14.5a.5.5 0 0 1 .485.621l-1.5 6A.5.5 0 0 1 13 11H4a.5.5 0 0 1-.485-.379L1.61 3H.5a.5.5 0 0 1-.5-.5M3.14 5l1.25 5h8.22l1.25-5zM5 13a1 1 0 1 0 0 2 1 1 0 0 0 0-2m-2 1a2 2 0 1 1 4 0 2 2 0 0 1-4 0m9-1a1 1 0 1 0 0 2 1 1 0 0 0 0-2m-2 1a2 2 0 1 1 4 0 2 2 0 0 1-4 0" />
+                  </svg>
+                  {cartItemCount > 0 && (
+                    <span className="badge bg-danger position-absolute top-0 badgeCount">
+                      {cartItemCount}
+                    </span>
+                  )}
                 </a>
-                
               </li>
-              <form className="d-flex">
-                <input
-                  className="form-control me-2"
-                  type="search"
-                  placeholder="Pretraži..."
-                  aria-label="Search"
-                />
-                <button className="btn btn-outline-light " type="submit">
-                  Pretraži
-                </button>
-              </form>
+
               {currentUser ? (
                 <div className="btn-group dropstart">
                   <button
