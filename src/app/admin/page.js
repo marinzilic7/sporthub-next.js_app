@@ -5,10 +5,10 @@ import Navigation from "../components/Navigation";
 import Footer from "../components/Footer";
 import { bottom } from "@popperjs/core";
 import { Familjen_Grotesk } from "next/font/google";
-import useSWR from 'swr';
+import useSWR from "swr";
 const Admin = () => {
   const fetcher = (url) => fetch(url).then((res) => res.json());
-  const { data, error, mutate } = useSWR('/api/items', fetcher);
+  const { data, error, mutate } = useSWR("/api/items", fetcher);
   const router = useRouter();
   const [users, setUsers] = useState([]);
   const [categoryName, setCategoryName] = useState("");
@@ -359,8 +359,6 @@ const Admin = () => {
         throw new Error(`HTTP error! Status: ${response.status}`);
       }
 
-     
-
       setItems((prevItems) =>
         prevItems.map((item) =>
           item._id === editingItem._id
@@ -371,19 +369,17 @@ const Admin = () => {
                 price: editItemPrice,
                 category_id: editItemCategoryId,
                 gender_id: editItemGenderId,
-                
               }
             : item
         )
       );
 
       alert("Ime artikla uspješno ažurirano");
-      location.reload()
+      location.reload();
       const editModal = bootstrap.Modal.getInstance(
         document.getElementById("editModalItem")
       );
       editModal.hide();
-     
     } catch (error) {
       console.error("Error updating item:", error);
     }
@@ -392,7 +388,7 @@ const Admin = () => {
   return (
     <div>
       <Navigation />
-      <div className="container">
+      <div className="container accordation-item-bottom">
         <h1 className="mt-5 text-center mt-5">Administracija</h1>
         <div
           className="accordion accordion-flush shadow-lg mt-5"
@@ -534,7 +530,7 @@ const Admin = () => {
               </div>
             </div>
           </div>
-          <div className="accordion-item">
+          <div className="accordion-item accordation-item-bottom">
             <h2 className="accordion-header">
               <button
                 className="accordion-button collapsed"
@@ -688,6 +684,9 @@ const Admin = () => {
                                 setSelectedCategoryForItem(e.target.value)
                               }
                             >
+                              <option value="" disabled selected>
+                                Odaberi kategoriju
+                              </option>
                               {categories.map((category) => (
                                 <option key={category._id} value={category._id}>
                                   {category.name}
@@ -710,6 +709,9 @@ const Admin = () => {
                                 setSelectedGender(e.target.value)
                               }
                             >
+                              <option value="" disabled selected>
+                                Odaberi spol
+                              </option>
                               {genders.map((gender) => (
                                 <option key={gender._id} value={gender._id}>
                                   {gender.name}

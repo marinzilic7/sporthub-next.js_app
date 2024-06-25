@@ -24,3 +24,33 @@
   z-index: 2; /* Ensure the content appears above the overlay */
   color: white; /* Adjust text color if necessary */
 }
+
+.card-text{
+  font-size: 14px;
+}
+
+
+.card-img-top{
+  height: 150px;
+  object-fit: cover;
+}
+
+.icon-cart{
+  height: 40px;
+}
+
+.container-bottom{
+  margin-bottom: 50px;
+}
+
+.gap-card{
+  display: flex;
+  gap: 15vh !important;
+  margin-top: 10vh;
+  flex-wrap: wrap;
+}
+
+.accordation-item-bottom{
+  margin-bottom: 50px;
+}
+
