@@ -2,10 +2,12 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Navigation from "../components/Navigation";
+import Order_comp from "../components/Order_comp";
 import Footer from "../components/Footer";
 import { bottom } from "@popperjs/core";
 import { Familjen_Grotesk } from "next/font/google";
 import useSWR from "swr";
+import Order from "../order/page";
 const Admin = () => {
   const fetcher = (url) => fetch(url).then((res) => res.json());
   const { data, error, mutate } = useSWR("/api/items", fetcher);
@@ -752,7 +754,9 @@ const Admin = () => {
                 </div>
               </div>
             </div>
+            <Order_comp />
           </div>
+         
         </div>
       </div>
       {/* Edit Category Modal */}

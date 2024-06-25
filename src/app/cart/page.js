@@ -123,7 +123,7 @@ export default function Cart() {
             </div>
             <div className="text-end d-flex justify-content-end align-items-center gap-2">
               <h5 className="mt-2">Ukupna cijena: {totalPrice.toFixed(2)} €</h5>
-              <button className="btn btn-success btn-sm">Naruči</button>
+              <button className="btn btn-success btn-sm"><a href="/order" className="text-decoration-none text-light">Naruči</a></button>
             </div>
           </>
         )}
