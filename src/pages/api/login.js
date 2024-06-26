@@ -12,8 +12,8 @@ export default async function handler(req, res) {
 
     try {
       const client = await clientPromise;
-      const db = client.db('sporthub'); // Zamijenite s vašom bazom
-      const collection = db.collection('users'); // Zamijenite s vašom kolekcijom
+      const db = client.db('sporthub'); 
+      const collection = db.collection('users'); 
 
       const user = await collection.findOne({ email });
 

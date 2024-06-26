@@ -14,20 +14,17 @@ export default async function handler(req, res) {
         return res.status(400).json({ message: "Missing itemId or userId" });
       }
 
-      // Provjera da li artikl već postoji u korisnikovoj košarici
       let cartItem = await cartCollection.findOne({
         userId: new ObjectId(userId),
         itemId: new ObjectId(itemId),
       });
 
       if (cartItem) {
-        // Ako artikl već postoji, povećaj količinu
         await cartCollection.updateOne(
           { _id: cartItem._id },
           { $inc: { quantity: 1 } }
         );
       } else {
-        // Ako artikl ne postoji, kreiraj novi unos u košarici
         await cartCollection.insertOne({
           userId: new ObjectId(userId),
           itemId: new ObjectId(itemId),
@@ -52,29 +49,25 @@ export default async function handler(req, res) {
 
       console.log("Ovo je userId", userId);
 
-      // Dohvati sve artikle iz košarice za trenutnog korisnika
       const cartItems = await cartCollection
         .find({ userId: new ObjectId(userId) })
         .toArray();
 
-      // Dohvati detalje o artiklima koristeći itemId
       const itemIds = cartItems.map((item) => new ObjectId(item.itemId));
       const items = await itemsCollection
         .find({ _id: { $in: itemIds } })
         .toArray();
 
-      // Dohvati kategorije koristeći category_id kao string
-      const categoryIds = items.map((item) => item.category_id); // Mapirajte category_id kao string
+      const categoryIds = items.map((item) => item.category_id);
       const categories = await categoriesCollection
-        .find({ _id: { $in: categoryIds.map((id) => new ObjectId(id)) } }) // Usporedite kao ObjectId
+        .find({ _id: { $in: categoryIds.map((id) => new ObjectId(id)) } })
         .toArray();
 
-      // Mapiraj artikle iz košarice s detaljima o artiklima i kategorijama
       const detailedCartItems = cartItems.map((cartItem) => {
         const item = items.find((item) => item._id.equals(cartItem.itemId));
         const category = categories.find((cat) =>
           cat._id.equals(new ObjectId(item.category_id))
-        ); // Usporedite kao ObjectId
+        );
         return {
           ...cartItem,
           name: item.name,
@@ -84,8 +77,6 @@ export default async function handler(req, res) {
           fajlPath: item.fajlPath,
         };
       });
-
-      
 
       res.status(200).json(detailedCartItems);
     } catch (error) {

@@ -1,24 +1,24 @@
 import clientPromise from "../../bin/mongo";
 import { ObjectId } from "mongodb";
 
-// Handler funkcija za dohvaćanje svih korisnika
+
 export default async function handler(req, res) {
   if (req.method === "GET") {
     try {
       const client = await clientPromise;
-      const db = client.db("sporthub"); // Ime vaše baze podataka
+      const db = client.db("sporthub"); 
 
-      const usersCollection = db.collection("users"); // Ime kolekcije u kojoj su korisnici
-      const users = await usersCollection.find({}).toArray(); // Dohvaćamo sve korisnike iz kolekcije
+      const usersCollection = db.collection("users"); 
+      const users = await usersCollection.find({}).toArray(); 
 
-      res.status(200).json(users); // Vraćamo korisnike kao JSON odgovor
+      res.status(200).json(users);
     } catch (error) {
       console.error("Greška prilikom dohvata korisnika:", error);
       res.status(500).json({ message: "Interna serverska greška" });
     }
   } else if (req.method === "POST") {
     const { userId } = req.query;
-    console.log("Deleting user with ID:", userId); // Dodajte ovu liniju za praćenje
+    console.log("Deleting user with ID:", userId); 
 
     try {
       const { userId } = req.body;

@@ -38,37 +38,31 @@ export default async function handler(req, res) {
       const { name, size, price, category_id, gender_id, user_id } = fields;
       const image = files.image;
 
-      // Provjeravamo je li image definiran i je li niz
       if (Array.isArray(image) && image.length > 0) {
         const firstImage = image[0];
         if (firstImage.filepath) {
           console.log("PUTANJA SLIKE:", firstImage.filepath);
 
-          // Čitanje sadržaja slike i pretvaranje u base64
           const imageData = await fsPromises.readFile(firstImage.filepath);
           const fajlPath = firstImage.filepath;
           const encodedImage = imageData.toString("base64");
 
-          // Priprema novog artikla za unos u bazu
           const newItem = {
-            name: fields.name[0], // Uzeti prvi element iz niza name
-            size: fields.size[0], // Uzeti prvi element iz niza size
+            name: fields.name[0],
+            size: fields.size[0],
             price: parseFloat(price),
-            category_id: fields.category_id[0], // Uzeti prvi element iz niza category_id
-            gender_id: fields.gender_id[0], // Uzeti prvi element iz niza gender_id
-            fajlPath: firstImage.filepath, // Postaviti filepath kao string
+            category_id: fields.category_id[0],
+            gender_id: fields.gender_id[0],
+            fajlPath: firstImage.filepath,
           };
 
-          // Unos novog artikla u bazu
           const result = await db.collection("items").insertOne(newItem);
 
           if (result.insertedId) {
-            // Dohvati novododani artikl sa imenom kategorije i spola
             const addedItem = await db
               .collection("items")
               .findOne({ _id: result.insertedId });
 
-            // Dodavanje imena kategorije i spola
             const category = await db
               .collection("categories")
               .findOne({ _id: addedItem.category_id });
@@ -151,7 +145,7 @@ export default async function handler(req, res) {
   } else if (req.method === "PUT") {
     const { itemId } = req.query;
 
-    // Parsiraj tijelo zahtjeva
+   
     bodyParser.json()(req, res, async (err) => {
       if (err) {
         return res.status(400).json({ message: "Invalid JSON" });

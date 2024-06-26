@@ -35,7 +35,7 @@ export default function Order_comp() {
         throw new Error("Failed to delete order");
       }
 
-      // Update orders state by filtering out the deleted order
+     
       setOrders((prevOrders) => prevOrders.filter((order) => order._id !== orderId));
     } catch (error) {
       console.error("Error deleting order:", error);

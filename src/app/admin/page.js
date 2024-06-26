@@ -54,10 +54,10 @@ const Admin = () => {
           throw new Error("Neuspješan zahtjev za dohvaćanjem korisnika");
         }
         const data = await response.json();
-        setUsers(data); // Postavljamo dohvaćene korisnike u state
+        setUsers(data); 
       } catch (error) {
         console.error("Greška prilikom dohvata korisnika:", error);
-        // Ovdje možete obraditi grešku, npr. prikazati poruku korisniku
+       
       }
     };
 
@@ -97,7 +97,7 @@ const Admin = () => {
 
       if (response.ok) {
         const data = await response.json();
-        alert(data.message); // Prikaz poruke ako je kategorija uspješno izbrisana
+        alert(data.message); 
         setCategories(
           categories.filter((category) => category._id !== categoryId)
         );
@@ -107,7 +107,7 @@ const Admin = () => {
       }
     } catch (error) {
       console.error("Greška prilikom brisanja kategorije:", error.message);
-      // Ovdje možete obraditi grešku brisanja kategorije
+    
     }
   };
   useEffect(() => {
@@ -118,10 +118,10 @@ const Admin = () => {
           throw new Error("Neuspješan zahtjev za dohvaćanjem korisnika");
         }
         const data = await response.json();
-        setCategories(data); // Postavljamo dohvaćene korisnike u state
+        setCategories(data); 
       } catch (error) {
         console.error("Greška prilikom dohvata korisnika:", error);
-        // Ovdje možete obraditi grešku, npr. prikazati poruku korisniku
+     
       }
     };
 
@@ -146,11 +146,11 @@ const Admin = () => {
       const data = await response.json();
       console.log("Response data:", data);
 
-      // Provjerite da li je vraćen validan objekt kategorije
+   
       if (data.result && data.result.insertedId) {
         setCategories((prevCategories) => [
           ...prevCategories,
-          { _id: data.result.insertedId, name: categoryName }, // Dodajte novu kategoriju u stanje
+          { _id: data.result.insertedId, name: categoryName }, 
         ]);
         alert("Kategorija je uspješno dodana");
       } else {
@@ -158,9 +158,9 @@ const Admin = () => {
       }
     } catch (error) {
       console.error("Greška prilikom dodavanja kategorije:", error.message);
-      // Ovdje možete obraditi grešku dodavanja kategorije
+      
     }
-    setCategoryName(""); // Resetiranje stanja categoryName nakon dodavanja
+    setCategoryName(""); 
   };
 
   const handleEditCategory = (category) => {
@@ -171,8 +171,8 @@ const Admin = () => {
 
   const handleUpdateCategory = async (e) => {
     e.preventDefault();
-    // Update category logic here
-    // Example:
+   
+   
     try {
       const response = await fetch(
         `/api/categories?categoryId=${selectedCategory._id}`,
@@ -211,21 +211,21 @@ const Admin = () => {
   useEffect(() => {
     const checkAdminAccess = async () => {
       try {
-        // Učitavanje podataka o prijavljenom korisniku iz LocalStorage-a
+      
         const storedUserString = localStorage.getItem("currentUser");
         const storedUser = storedUserString
           ? JSON.parse(storedUserString)
           : null;
 
-        // Provjera je li korisnik prijavljen i je li admin
+      
         if (!storedUser || storedUser.role !== "admin") {
-          // Ako nije, preusmjeri na početnu stranicu
+          
           router.push("/home");
           alert("Nemate pristup administrativnoj stranici.");
         }
       } catch (error) {
         console.error("Greška pri provjeri pristupa:", error);
-        // U ovom slučaju, možete odlučiti što učiniti u slučaju greške (npr. prikazati poruku ili preusmjeriti)
+       
       }
     };
 
@@ -240,10 +240,10 @@ const Admin = () => {
           throw new Error("Neuspješan zahtjev za dohvaćanjem spola");
         }
         const data = await response.json();
-        setGenders(data); // Postavljamo dohvaćene korisnike u state
+        setGenders(data); 
       } catch (error) {
         console.error("Greška prilikom dohvata spola:", error);
-        // Ovdje možete obraditi grešku, npr. prikazati poruku korisniku
+        
       }
     };
 
@@ -276,7 +276,7 @@ const Admin = () => {
           genders.find((gender) => gender._id === newItem.gender_id)?.name ||
           "Unknown";
 
-        // Dodaj nova polja u novi artikl
+        
         newItem.category_name = categoryName;
         newItem.gender_name = genderName;
 
@@ -290,7 +290,7 @@ const Admin = () => {
       console.error("Greška prilikom dodavanja artikla:", error.message);
     }
 
-    // Reset form fields
+  
     setItemName("");
     setItemSize("");
     setItemPrice("");
@@ -331,7 +331,7 @@ const Admin = () => {
 
   const handleEditItem = (item) => {
     setEditingItem(item);
-    setEditItemName(item.name); // Postavljamo početno ime artikla u formu
+    setEditItemName(item.name); 
     setEditItemSize(item.size);
     setEditItemPrice(item.price);
     setEditItemCategoryId(item.category_id);

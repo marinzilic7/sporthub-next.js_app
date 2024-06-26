@@ -38,10 +38,10 @@ function Login() {
                     role:data.user.role
                 }));
 
-                router.push('/home'); // Preusmjeravanje na /home nakon uspješne prijave
+                router.push('/home'); 
             } else {
                 const error = await response.json();
-                setError(error.error); // Postavljanje poruke o grešci za prikaz na frontendu
+                setError(error.error); 
             }
         } catch (error) {
             console.error('Došlo je do greške prilikom prijave:', error);

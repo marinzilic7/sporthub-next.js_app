@@ -9,7 +9,7 @@ const Account = () => {
     firstName: "",
     lastName: "",
     email: "",
-    password: "", // Ne preporučuje se dohvaćanje lozinke iz sigurnosnih razloga
+    password: "", 
   });
 
   const [newPassword, setNewPassword] = useState("");
@@ -36,7 +36,7 @@ const Account = () => {
                 firstName: data.firstName,
                 lastName: data.lastName,
                 email: data.email,
-                password: "***********", // Nemojte dohvatiti lozinku, ili je obradite sigurno
+                password: "***********", 
               });
             } else {
               console.error("User ID is not defined.");
@@ -71,7 +71,7 @@ const Account = () => {
 
       if (response.ok) {
         alert("Lozinka je uspješno promijenjena!");
-        setNewPassword(""); // Opcionalno, možete očistiti polje za unos nove lozinke
+        setNewPassword(""); 
       } else {
         console.error("Neuspješna promjena lozinke:", response.statusText);
       }

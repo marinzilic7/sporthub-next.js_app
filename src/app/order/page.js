@@ -39,11 +39,10 @@ export default function Order() {
         throw new Error("Failed to place order");
       }
 
-      // Nakon uspješne narudžbe, možete dodati dodatnu logiku ovdje (npr. prikaz potvrde)
+      
       alert("Narudžba je uspješno poslana!");
 
-      // Opcionalno: Možete preusmjeriti korisnika na stranicu s potvrdom
-      // history.push("/order-confirmation");
+      
 
     } catch (error) {
       console.error("Error placing order:", error);

@@ -9,33 +9,30 @@ function Navigation() {
   const router = useRouter();
 
   useEffect(() => {
-    // Povlačenje korisničkih podataka iz localStorage-a
     const storedUser = localStorage.getItem("currentUser");
 
-    const userObject = JSON.parse(storedUser);
-    const userId = userObject.id;
     if (storedUser) {
-      setCurrentUser(JSON.parse(storedUser));
-    }
+      const userObject = JSON.parse(storedUser);
+      const userId = userObject.id;
+      setCurrentUser(userObject);
 
-    // Dohvat broja artikala u košarici
-    const fetchCartItemCount = async () => {
-      try {
-        if (storedUser) {
+      // Dohvat broja artikala u košarici
+      const fetchCartItemCount = async () => {
+        try {
           const response = await fetch(`/api/numCart?userId=${userId}`);
-
           const data = await response.json();
           setCartItemCount(data);
           console.log(data);
+        } catch (error) {
+          console.error("Error fetching cart item count:", error);
         }
-      } catch (error) {
-        console.error("Error fetching cart item count:", error);
-      }
-    };
+      };
 
-    fetchCartItemCount();
+      fetchCartItemCount();
+    } else {
+      setCartItemCount(0);
+    }
   }, []);
-
   const handleLogout = () => {
     document.cookie =
       "sessionToken=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT;";

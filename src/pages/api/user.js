@@ -25,24 +25,23 @@ export default async function handler(req, res) {
       res.status(500).json({ message: 'Interna serverska greška' });
     }
   } else if (req.method === 'POST') {
-    // POST metoda za promjenu lozinke
+  
     const { userId, newPassword } = req.body;
 
     try {
       const client = await clientPromise;
-      const db = client.db('sporthub'); // Koristi ispravno ime baze podataka ako je različito od zadane
+      const db = client.db('sporthub'); 
 
       const usersCollection = db.collection('users');
 
-      // Prvo provjerite je li userId ispravan ObjectId format
+      
       if (!ObjectId.isValid(userId)) {
         return res.status(400).json({ message: 'Neispravan format ID-a korisnika' });
       }
 
-      // Hashiranje nove lozinke
-      const hashedPassword = await bcrypt.hash(newPassword, 10); // Salt faktor od 10
+      const hashedPassword = await bcrypt.hash(newPassword, 10);
 
-      // Ažuriranje korisničkog zapisa s novom hashiranom lozinkom
+     
       const result = await usersCollection.updateOne(
         { _id: new ObjectId(userId) },
         { $set: { password: hashedPassword } }

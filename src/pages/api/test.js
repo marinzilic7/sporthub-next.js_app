@@ -4,9 +4,9 @@ import clientPromise from '../../bin/mongo';
 export default async (req, res) => {
   try {
     const client = await clientPromise;
-    const db = client.db('sporthub'); // Zamenite sa vašom bazom
+    const db = client.db('sporthub'); 
 
-    const data = await db.collection('sporthub').find({}).toArray(); // Zamenite sa vašom kolekcijom
+    const data = await db.collection('sporthub').find({}).toArray(); 
 
     res.json(data);
   } catch (e) {

@@ -10,7 +10,7 @@ export default async function handler(req, res) {
       const client = await clientPromise;
       const db = client.db("sporthub");
 
-      // Dohvati korisnikovu košaricu iz baze
+  
       const cartCollection = db.collection("cart");
       const ordersCollection = db.collection("orders");
 
@@ -18,11 +18,10 @@ export default async function handler(req, res) {
         .find({ userId: new ObjectId(userId) })
         .toArray();
 
-      // Pripremi podatke za spremanje narudžbe
+    
       const orderItems = cartItems.map((item) => ({
         itemId: item.itemId,
         quantity: item.quantity,
-        // Dodajte dodatne podatke o artiklu ako su potrebni
       }));
 
       const orderData = {
@@ -37,10 +36,10 @@ export default async function handler(req, res) {
         orderDate: new Date(),
       };
 
-      // Spremi narudžbu u bazu
+
       const result = await ordersCollection.insertOne(orderData);
 
-      // Očisti korisnikovu košaricu nakon uspješne narudžbe
+   
       await cartCollection.deleteMany({ userId: new ObjectId(userId) });
 
       res.status(201).json({ message: "Narudžba uspješno poslana", orderData });

@@ -1,6 +1,6 @@
 // pages/api/register.js
 
-import { hash } from "bcryptjs"; // ili neki drugi način enkripcije lozinke
+import { hash } from "bcryptjs"; 
 import clientPromise from "../../bin/mongo";
 
 export default async function handler(req, res) {
@@ -13,9 +13,9 @@ export default async function handler(req, res) {
 
     try {
       const client = await clientPromise;
-      const db = client.db("sporthub"); // Promijenite ime vaše baze
+      const db = client.db("sporthub"); 
 
-      // Provjera postoji li korisnik s istom email adresom
+
       const existingUser = await db.collection("users").findOne({ email });
       if (existingUser) {
         return res
@@ -23,10 +23,10 @@ export default async function handler(req, res) {
           .json({ error: "Korisnik sa ovim email-om već postoji." });
       }
 
-      // Enkriptiranje lozinke (primjer s bcryptjs)
+    
       const hashedPassword = await hash(password, 10);
 
-      // Spremanje korisnika u bazu
+ 
       const result = await db.collection("users").insertOne({
         firstName,
         lastName,

@@ -11,7 +11,7 @@ export default async function handler(req, res) {
       const categoriesCollection = db.collection("categories");
       const gendersCollection = db.collection("gender");
 
-      // Pronađi gender_id za "Muškarci"
+      
       const gender = await gendersCollection.findOne({ name: "Muškarci" });
       if (!gender) {
         return res.status(404).json({ error: "Gender not found" });
