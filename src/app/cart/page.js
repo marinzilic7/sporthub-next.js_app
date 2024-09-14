@@ -8,25 +8,66 @@ export default function Cart() {
   const [cartItems, setCartItems] = useState([]);
   const [error, setError] = useState(null);
   const [totalPrice, setTotalPrice] = useState(0);
+  const [currentUser, setCurrentUser] = useState(null);
 
   useEffect(() => {
     const fetchCartItems = async () => {
       try {
         const currentUser = JSON.parse(localStorage.getItem("currentUser"));
-
-        const response = await fetch(`/api/cart?userId=${currentUser.id}`);
-        if (!response.ok) {
-          throw new Error("Kosarica je prazna zbog nedostupnosti artikala");
+        const userId = currentUser ? currentUser.id : null;
+  
+        if (userId) {
+          // Ako je korisnik prijavljen, dohvati artikle iz baze podataka
+          setCurrentUser(currentUser);
+          const response = await fetch(`/api/cart?userId=${currentUser.id}`);
+          if (!response.ok) {
+            throw new Error("Kosarica je prazna zbog nedostupnosti artikala");
+          }
+          const data = await response.json();
+          setCartItems(data);
+          const total = data.reduce(
+            (acc, item) => acc + item.price * item.quantity,
+            0
+          );
+          setTotalPrice(total);
+        } else {
+          // Ako korisnik nije prijavljen, koristi localStorage
+          const guestCartItems = JSON.parse(localStorage.getItem("guestCart")) || [];
+  
+          if (guestCartItems.length === 0) {
+            setCartItems([]);
+            setTotalPrice(0);
+            return;
+          }
+  
+          // Dohvati itemIds iz guestCartItems
+          const itemIds = guestCartItems.map(item => item.itemId);
+  
+          // Izradi URL za dohvaćanje artikala
+          const response = await fetch(`/api/items?itemIds=${itemIds.join(",")}`);
+          if (!response.ok) {
+            throw new Error("Ne mogu dohvatiti artikle.");
+          }
+          const itemsData = await response.json();
+  
+          // Spoji podatke iz localStorage s dohvaćenim podacima
+          const fetchedItems = guestCartItems.map(guestItem => {
+            const itemData = itemsData.find(item => item._id === guestItem.itemId);
+            return {
+              ...itemData, // Podaci o artiklu iz baze
+              quantity: guestItem.quantity // Količina iz localStorage-a
+            };
+          });
+  
+          setCartItems(fetchedItems);
+  
+          // Izračunaj ukupnu cijenu
+          const total = fetchedItems.reduce((acc, item) => acc + item.price * item.quantity, 0);
+          setTotalPrice(total);
         }
-        const data = await response.json();
-        setCartItems(data);
-        const total = data.reduce(
-          (acc, item) => acc + item.price * item.quantity,
-          0
-        );
-        setTotalPrice(total);
       } catch (error) {
         console.error("Error fetching cart items:", error);
+        setError("Došlo je do pogreške prilikom dohvaćanja košarice.");
       }
     };
     fetchCartItems();
@@ -40,10 +81,13 @@ export default function Cart() {
   };
 
   const removeFromCart = async (itemId) => {
-    try {
-      const currentUser = JSON.parse(localStorage.getItem("currentUser"));
-      const userId = currentUser.id;
+  try {
+    const currentUser = JSON.parse(localStorage.getItem("currentUser"));
+   
 
+    if (currentUser) {
+      // Korisnik je prijavljen
+      const userId = currentUser.id;
       const response = await fetch(`/api/cart?userId=${userId}&itemId=${itemId}`, {
         method: "DELETE",
       });
@@ -61,11 +105,29 @@ export default function Cart() {
         0
       );
       setTotalPrice(total);
-    } catch (error) {
-      console.error("Error removing item from cart:", error);
-      alert("Error removing item from cart");
+    } else {
+      // Korisnik nije prijavljen
+      const guestCartItems = JSON.parse(localStorage.getItem("guestCart")) || [];
+      const updatedGuestCartItems = guestCartItems.filter((item) => item.itemId !== itemId);
+      localStorage.setItem("guestCart", JSON.stringify(updatedGuestCartItems));
     }
-  };
+
+    // Ažuriraj stanje cartItems
+    setCartItems((prevItems) => {
+      const updatedItems = prevItems.filter((item) => item._id !== itemId);
+      const total = updatedItems.reduce(
+        (acc, item) => acc + item.price * item.quantity,
+        0
+      );
+      setTotalPrice(total);
+      return updatedItems;
+    });
+  } catch (error) {
+    console.error("Error removing item from cart:", error);
+    alert("Error removing item from cart");
+  }
+};
+
   return (
     <div>
       <Navigation />
@@ -123,7 +185,13 @@ export default function Cart() {
             </div>
             <div className="text-end d-flex justify-content-end align-items-center gap-2">
               <h5 className="mt-2">Ukupna cijena: {totalPrice.toFixed(2)} €</h5>
-              <button className="btn btn-success btn-sm"><a href="/order" className="text-decoration-none text-light">Naruči</a></button>
+              {currentUser ? (
+                <button className="btn btn-success btn-sm">
+                  <a href="/order" className="text-decoration-none text-light">Naruči</a>
+                </button>
+              ) : (
+                <p className="text-danger fw-bold mt-2">Morate se prijaviti kako biste mogli naručiti.</p>
+              )}
             </div>
           </>
         )}

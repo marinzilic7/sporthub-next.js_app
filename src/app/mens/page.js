@@ -12,6 +12,7 @@ export default function Mens() {
   const [selectedPriceRange, setSelectedPriceRange] = useState("all");
   const [selectedCategoryRange, setSelectedCategoryRange] = useState("all");
   const [categories, setCategories] = useState([]);
+  const [searchTerm, setSearchTerm] = useState(""); // Dodano stanje za filtriranje po nazivu
 
   useEffect(() => {
     const fetchMensItems = async () => {
@@ -30,7 +31,7 @@ export default function Mens() {
 
     const fetchCategories = async () => {
       try {
-        const response = await fetch("/api/categories"); // Prilagodite putanju prema vašem API-ju za kategorije
+        const response = await fetch("/api/categories");
         if (!response.ok) {
           throw new Error("Failed to fetch categories");
         }
@@ -38,7 +39,6 @@ export default function Mens() {
         setCategories(data);
       } catch (error) {
         console.error("Error fetching categories:", error);
-        // Postavite state greške ako je potrebno
       }
     };
 
@@ -56,25 +56,42 @@ export default function Mens() {
 
   const addToCart = async (itemId) => {
     try {
-      const currentUser = JSON.parse(localStorage.getItem("currentUser"));
-      const userId = currentUser.id;
+      const currentUser = localStorage.getItem("currentUser");
 
-      const response = await fetch("/api/cart", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ itemId, userId }),
-      });
+      if (currentUser) {
+        // Korisnik je prijavljen, pohrani artikle u bazu
+        const userId = JSON.parse(currentUser).id;
 
-      if (!response.ok) {
-        throw new Error("Failed to add item to cart");
+        const response = await fetch("/api/cart", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ itemId, userId }),
+        });
+
+        if (!response.ok) {
+          throw new Error("Failed to add item to cart");
+        }
+
+        const data = await response.json();
+        alert(data.message);
+      } else {
+        // Korisnik nije prijavljen, pohrani artikle u localStorage
+        let cart = JSON.parse(localStorage.getItem("guestCart")) || [];
+
+        const existingItem = cart.find((item) => item.itemId === itemId);
+        if (existingItem) {
+          existingItem.quantity += 1;
+        } else {
+          cart.push({ itemId, quantity: 1 });
+        }
+
+        localStorage.setItem("guestCart", JSON.stringify(cart));
+        alert("Artikal je dodan u košaricu.");
       }
-      const data = await response.json();
-      alert(data.message);
     } catch (error) {
       console.error("Error adding item to cart:", error);
-      alert("Za dodavanje artikla u košaricu potrebno se prijaviti.");
     }
   };
 
@@ -104,12 +121,19 @@ export default function Mens() {
     }
   };
 
+  // Filtriranje po nazivu
+  const filterByName = (item) => {
+    if (!searchTerm) return true;
+    return item.name.toLowerCase().includes(searchTerm.toLowerCase());
+  };
+
   // Paginacija
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
   const currentItems = mens
     .filter(filterByPrice)
     .filter(filterByCategory)
+    .filter(filterByName) // Dodano filtriranje po nazivu
     .slice(indexOfFirstItem, indexOfLastItem);
 
   const paginate = (pageNumber) => setCurrentPage(pageNumber);
@@ -129,6 +153,18 @@ export default function Mens() {
       <Navigation />
       <div className="container container-bottom">
         <h1 className="mt-3 text-center">Ponuda za muškarce</h1>
+
+        {/* Input za filtriranje po nazivu */}
+        <div className="text-center mt-3">
+          <label className="me-2">Pretraži po nazivu:</label>
+          <input
+            type="text"
+            className="form-control form-control-sm"
+            placeholder="Unesi naziv"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+        </div>
 
         {/* Dropdown za filtriranje po cijeni */}
         <div className="text-center mt-3">
@@ -169,7 +205,9 @@ export default function Mens() {
         ) : (
           <div>
             {currentItems.length === 0 ? (
-              <p className="mt-3 alert alert-warning text-center">Nema dostupnih artikala.</p>
+              <p className="mt-3 alert alert-warning text-center">
+                Nema dostupnih artikala.
+              </p>
             ) : (
               <div>
                 {Array.from({
@@ -228,6 +266,7 @@ export default function Mens() {
                               </div>
                             </div>
                           </div>
+                          
                         </div>
                       ))}
                   </div>
@@ -242,8 +281,10 @@ export default function Mens() {
           <Pagination>
             {Array.from({
               length: Math.ceil(
-                mens.filter(filterByPrice).filter(filterByCategory).length /
-                  itemsPerPage
+                mens
+                  .filter(filterByPrice)
+                  .filter(filterByCategory)
+                  .filter(filterByName).length / itemsPerPage
               ),
             }).map((_, index) => (
               <Pagination.Item
