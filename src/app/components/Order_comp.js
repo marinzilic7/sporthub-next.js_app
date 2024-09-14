@@ -1,4 +1,5 @@
 "use client";
+
 import { useEffect, useState } from "react";
 import { format } from "date-fns";
 
@@ -25,21 +26,59 @@ export default function Order_comp() {
 
     fetchOrders();
   }, []);
-  const handleDeleteOrder = async (orderId) => {
-    try {
-      const response = await fetch(`/api/order?orderId=${orderId}`, {
-        method: "DELETE",
-      });
 
-      if (!response.ok) {
-        throw new Error("Failed to delete order");
+  const handleDeleteOrder = async (orderId, status) => {
+    if (status === "in_progress") {
+      alert("Ne možete izbrisati narudžbu koja je u tijeku.");
+      return;
+    }
+
+    if (confirm("Jeste li sigurni da želite izbrisati ovu narudžbu?")) {
+      try {
+        const response = await fetch(`/api/order?orderId=${orderId}`, {
+          method: "DELETE",
+        });
+
+        if (!response.ok) {
+          throw new Error("Failed to delete order");
+        }
+
+        setOrders((prevOrders) => prevOrders.filter((order) => order._id !== orderId));
+      } catch (error) {
+        console.error("Error deleting order:", error);
+        setError("Failed to delete order");
       }
+    }
+  };
 
-     
-      setOrders((prevOrders) => prevOrders.filter((order) => order._id !== orderId));
-    } catch (error) {
-      console.error("Error deleting order:", error);
-      setError("Failed to delete order");
+  const handleUpdateOrderStatus = async (orderId) => {
+    if (confirm("Narudžba je dostavljena?")) {
+      try {
+        const response = await fetch("/api/order", {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            orderId: orderId,
+            status: "completed",
+          }),
+        });
+
+        if (!response.ok) {
+          throw new Error("Failed to update order status");
+        }
+
+        const updatedOrder = await response.json();
+        setOrders((prevOrders) =>
+          prevOrders.map((order) =>
+            order._id === orderId ? { ...order, status: "Isporučeno" } : order
+          )
+        );
+      } catch (error) {
+        console.error("Error updating order status:", error);
+        setError("Failed to update order status");
+      }
     }
   };
 
@@ -55,7 +94,7 @@ export default function Order_comp() {
           aria-expanded="false"
           aria-controls="flush-collapseFive"
         >
-          Sve narudze/ praćenje narudzbi
+          Sve narudžbe/ praćenje narudžbi
         </button>
       </h2>
       <div
@@ -77,8 +116,10 @@ export default function Order_comp() {
                   <th>Telefon</th>
                   <th>Grad</th>
                   <th>Zip</th>
-                  <th>Datum narudzbe</th>
-                  <th>Izbrisi</th>
+                  <th>Datum narudžbe</th>
+                  <th>Status</th>
+                  <th>Uredi</th>
+                  <th>Izbriši</th>
                 </tr>
               </thead>
               <tbody>
@@ -92,7 +133,26 @@ export default function Order_comp() {
                     <td>{order.city}</td>
                     <td>{order.zip}</td>
                     <td>{formatDate(order.orderDate)}</td>
-                    <td><button className="btn btn-outline-danger btn-sm" onClick={() => handleDeleteOrder(order._id)}>Izbrisi</button></td>
+                    <td>{order.status}</td>
+                    <td>
+                      
+                        <button
+                          className="btn btn-outline-success btn-sm"
+                          onClick={() => handleUpdateOrderStatus(order._id)}
+                        >
+                          Uredi
+                        </button>
+                    
+                    </td>
+                    <td>
+                      <button
+                        className="btn btn-outline-danger btn-sm"
+                        onClick={() => handleDeleteOrder(order._id, order.status)}
+                        disabled={order.status === "Isporučeno"}
+                      >
+                        Izbriši
+                      </button>
+                    </td>
                   </tr>
                 ))}
               </tbody>

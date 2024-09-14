@@ -38,6 +38,7 @@ export default function Order() {
           city,
           zip,
           paymentMethod,
+          status: "U tijeku",
          
         }),
       });

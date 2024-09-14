@@ -185,7 +185,7 @@ export default function Mens() {
   return (
     <div>
       <Navigation />
-      <div className="container container-bottom">
+      <div className="container container-bottom"  style={{ marginBottom: "100px" }}>
         <h1 className="mt-3 text-center">Ponuda za muškarce</h1>
 
         <div className="text-center mt-3">

@@ -34,6 +34,7 @@ export default async function handler(req, res) {
         zip,
         itemId: orderItems,
         orderDate: new Date(),
+        status: "U tijeku",
       };
 
 
@@ -83,7 +84,34 @@ export default async function handler(req, res) {
       console.error("Greška prilikom brisanja narudzbe:", error);
       res.status(500).json({ message: "Interna serverska greška" });
     }
-  } else {
+    
+  } 
+  else if (req.method === "PATCH") {
+    try {
+      const { orderId, status } = req.body;
+      if (!orderId || !status) {
+        return res.status(400).json({ error: "Order ID and status are required" });
+      }
+
+      const client = await clientPromise;
+      const db = client.db("sporthub");
+      const ordersCollection = db.collection("orders");
+
+      const result = await ordersCollection.updateOne(
+        { _id: new ObjectId(orderId) },
+        { $set: { status: status } }
+      );
+
+      if (result.modifiedCount === 0) {
+        return res.status(404).json({ error: "Order not found or status unchanged" });
+      }
+
+      res.status(200).json({ message: "Order updated successfully" });
+    } catch (error) {
+      console.error("Error updating order:", error);
+      res.status(500).json({ error: error.message });
+    }
+  }else {
     res.status(405).json({ message: "Metoda nije dopuštena" });
   }
 }
