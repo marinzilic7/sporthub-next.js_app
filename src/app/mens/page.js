@@ -12,7 +12,10 @@ export default function Mens() {
   const [selectedPriceRange, setSelectedPriceRange] = useState("all");
   const [selectedCategoryRange, setSelectedCategoryRange] = useState("all");
   const [categories, setCategories] = useState([]);
-  const [searchTerm, setSearchTerm] = useState(""); // Dodano stanje za filtriranje po nazivu
+  const [searchTerm, setSearchTerm] = useState("");
+  const [reviewItemId, setReviewItemId] = useState(null);
+  const [reviewText, setReviewText] = useState("");
+  const [reviewRating, setReviewRating] = useState(1);
 
   useEffect(() => {
     const fetchMensItems = async () => {
@@ -59,9 +62,7 @@ export default function Mens() {
       const currentUser = localStorage.getItem("currentUser");
 
       if (currentUser) {
-        // Korisnik je prijavljen, pohrani artikle u bazu
         const userId = JSON.parse(currentUser).id;
-
         const response = await fetch("/api/cart", {
           method: "POST",
           headers: {
@@ -77,9 +78,7 @@ export default function Mens() {
         const data = await response.json();
         alert(data.message);
       } else {
-        // Korisnik nije prijavljen, pohrani artikle u localStorage
         let cart = JSON.parse(localStorage.getItem("guestCart")) || [];
-
         const existingItem = cart.find((item) => item.itemId === itemId);
         if (existingItem) {
           existingItem.quantity += 1;
@@ -95,7 +94,42 @@ export default function Mens() {
     }
   };
 
-  // Filtriranje po cijeni
+  const handleReviewSubmit = async () => {
+    try {
+      const currentUser = localStorage.getItem("currentUser");
+      if (!currentUser) {
+        alert("Morate biti prijavljeni za dodavanje recenzije.");
+        return;
+      }
+
+      const userId = JSON.parse(currentUser).id;
+      const response = await fetch("/api/reviews", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          userId,
+          itemId: reviewItemId,
+          text: reviewText,
+          rating: reviewRating,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to submit review");
+      }
+
+      const data = await response.json();
+      alert(data.message);
+      setReviewItemId(null); // Hide the review form after submission
+      setReviewText("");
+      setReviewRating(1);
+    } catch (error) {
+      console.error("Error submitting review:", error);
+    }
+  };
+
   const filterByPrice = (item) => {
     switch (selectedPriceRange) {
       case "all":
@@ -111,7 +145,6 @@ export default function Mens() {
     }
   };
 
-  // Filtriranje po kategoriji
   const filterByCategory = (item) => {
     switch (selectedCategoryRange) {
       case "all":
@@ -121,31 +154,32 @@ export default function Mens() {
     }
   };
 
-  // Filtriranje po nazivu
   const filterByName = (item) => {
     if (!searchTerm) return true;
     return item.name.toLowerCase().includes(searchTerm.toLowerCase());
   };
 
-  // Paginacija
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
   const currentItems = mens
     .filter(filterByPrice)
     .filter(filterByCategory)
-    .filter(filterByName) // Dodano filtriranje po nazivu
+    .filter(filterByName)
     .slice(indexOfFirstItem, indexOfLastItem);
 
   const paginate = (pageNumber) => setCurrentPage(pageNumber);
 
   const handlePriceFilterChange = (e) => {
     setSelectedPriceRange(e.target.value);
-    setCurrentPage(1); // Resetiranje stranice na 1 kada se promijeni filter
+    setCurrentPage(1);
   };
 
   const handleCategoryFilterChange = (e) => {
     setSelectedCategoryRange(e.target.value);
-    setCurrentPage(1); // Resetiranje stranice na 1 kada se promijeni filter
+    setCurrentPage(1);
+  };
+  const handleRatingClick = (rating) => {
+    setReviewRating(rating);
   };
 
   return (
@@ -154,7 +188,6 @@ export default function Mens() {
       <div className="container container-bottom">
         <h1 className="mt-3 text-center">Ponuda za muškarce</h1>
 
-        {/* Input za filtriranje po nazivu */}
         <div className="text-center mt-3">
           <label className="me-2">Pretraži po nazivu:</label>
           <input
@@ -166,7 +199,6 @@ export default function Mens() {
           />
         </div>
 
-        {/* Dropdown za filtriranje po cijeni */}
         <div className="text-center mt-3">
           <label className="me-2">Filtriraj po cijeni:</label>
           <select
@@ -182,7 +214,6 @@ export default function Mens() {
           </select>
         </div>
 
-        {/* Dropdown za filtriranje po kategorijama */}
         <div className="text-center mt-3">
           <label className="me-2">Filtriraj po kategorijama:</label>
           <select
@@ -231,6 +262,7 @@ export default function Mens() {
                               )}`}
                               className="card-img-top"
                               alt="Slika artikla"
+                              style={{ height: "200px", objectFit: "cover" }} // Prilagođavanje visine slike
                             />
                             <div className="card-body">
                               <h5 className="card-title text-center">
@@ -249,10 +281,10 @@ export default function Mens() {
                                 Kategorija: {item.category_name}
                               </p>
                               <hr />
-                              <div className="d-flex justify-content-between align-items-center">
-                                <p className="card-text fs-5 mt-3">
-                                  {item.price} €
-                                </p>
+                              <p className="card-text text-center">
+                                Cijena: {item.price} €
+                              </p>
+                              <div className="d-flex justify-content-center">
                                 <button
                                   className="btn btn-sm"
                                   onClick={() => addToCart(item._id)}
@@ -264,39 +296,84 @@ export default function Mens() {
                                   />
                                 </button>
                               </div>
+
+                              <button
+                                className="btn btn-success btn-sm w-100 mt-2"
+                                onClick={() => {
+                                  setReviewItemId(item._id);
+                                }}
+                              >
+                                Napiši recenziju
+                              </button>
+                              <button className="btn btn-primary btn-sm w-100 mt-2">
+                                <a className="text-light"  href={`/reviews?itemId=${item._id}`}>Prikazi recenzije</a>
+                                
+                              </button>
                             </div>
                           </div>
-                          
                         </div>
                       ))}
                   </div>
                 ))}
               </div>
             )}
+
+            <Pagination className="mt-3">
+              {[...Array(Math.ceil(mens.length / itemsPerPage))].map(
+                (_, index) => (
+                  <Pagination.Item
+                    key={index + 1}
+                    active={index + 1 === currentPage}
+                    onClick={() => paginate(index + 1)}
+                  >
+                    {index + 1}
+                  </Pagination.Item>
+                )
+              )}
+            </Pagination>
           </div>
         )}
 
-        {/* Paginacija */}
-        <div className="d-flex justify-content-center mt-4">
-          <Pagination>
-            {Array.from({
-              length: Math.ceil(
-                mens
-                  .filter(filterByPrice)
-                  .filter(filterByCategory)
-                  .filter(filterByName).length / itemsPerPage
-              ),
-            }).map((_, index) => (
-              <Pagination.Item
-                key={index}
-                active={index + 1 === currentPage}
-                onClick={() => paginate(index + 1)}
-              >
-                {index + 1}
-              </Pagination.Item>
-            ))}
-          </Pagination>
-        </div>
+        {reviewItemId && (
+          <div className="review-form mt-4"  style={{ marginBottom: "200px" }}>
+            <h3>Napiši recenziju</h3>
+            <div className="mb-3">
+              <label htmlFor="review-text" className="form-label">
+                Tekst recenzije
+              </label>
+              <textarea
+                id="review-text"
+                className="form-control"
+                rows="3"
+                value={reviewText}
+                onChange={(e) => setReviewText(e.target.value)}
+              ></textarea>
+            </div>
+            <div className="mb-3">
+              <label className="form-label">Ocjena</label>
+              <div className="d-flex">
+                {[1, 2, 3, 4, 5].map((rating) => (
+                  <span
+                    key={rating}
+                    className={`star ${rating <= reviewRating ? "filled" : ""}`}
+                    onClick={() => handleRatingClick(rating)}
+                  >
+                    ★
+                  </span>
+                ))}
+              </div>
+            </div>
+            <button className="btn btn-primary" onClick={handleReviewSubmit}>
+              Pošalji recenziju
+            </button>
+            <button
+              className="btn btn-secondary ms-2"
+              onClick={() => setReviewItemId(null)}
+            >
+              Odustani
+            </button>
+          </div>
+        )}
       </div>
       <Footer />
     </div>
