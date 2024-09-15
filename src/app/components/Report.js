@@ -132,7 +132,7 @@ export default function ReportComponent() {
                         <td>{item.categoryId}</td>
                         <td>{item.categoryName}</td>
                         <td>{item.totalQuantity}</td>
-                        <td>{item.totalRevenue.toFixed(2)}</td>
+                        <td>{item.totalRevenue.toFixed(2)} €</td>
                         <td>{item.orderDate}</td> {/* Add date here */}
                       </tr>
                     ))

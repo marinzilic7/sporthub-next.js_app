@@ -1,4 +1,5 @@
 import clientPromise from "../../bin/mongo";
+import { ObjectId } from "mongodb";
 
 export default async function handler(req, res) {
   if (req.method === "GET") {
@@ -21,8 +22,8 @@ export default async function handler(req, res) {
             {
               $match: {
                 orderDate: { $gte: startDate, $lte: endDate },
-                status: "Isporučeno"
-              }
+                status: "Isporučeno",
+              },
             },
             { $unwind: "$itemId" },
             {
@@ -30,8 +31,8 @@ export default async function handler(req, res) {
                 from: "items",
                 localField: "itemId.itemId",
                 foreignField: "_id",
-                as: "item"
-              }
+                as: "item",
+              },
             },
             { $unwind: "$item" },
             {
@@ -39,9 +40,11 @@ export default async function handler(req, res) {
                 _id: "$item._id",
                 itemName: { $first: "$item.name" },
                 totalQuantity: { $sum: "$itemId.quantity" },
-                totalRevenue: { $sum: { $multiply: ["$itemId.quantity", "$item.price"] } },
-                orderDate: { $first: "$orderDate" }
-              }
+                totalRevenue: {
+                  $sum: { $multiply: ["$itemId.quantity", "$item.price"] },
+                },
+                orderDate: { $first: "$orderDate" },
+              },
             },
             {
               $project: {
@@ -49,9 +52,11 @@ export default async function handler(req, res) {
                 itemName: "$itemName",
                 totalQuantity: 1,
                 totalRevenue: { $round: ["$totalRevenue", 2] },
-                orderDate: { $dateToString: { format: "%Y-%m-%d", date: "$orderDate" } }
-              }
-            }
+                orderDate: {
+                  $dateToString: { format: "%Y-%m-%d", date: "$orderDate" },
+                },
+              },
+            },
           ])
           .toArray();
       } else if (reportType === "salesByCategory") {
@@ -60,8 +65,8 @@ export default async function handler(req, res) {
             {
               $match: {
                 orderDate: { $gte: startDate, $lte: endDate },
-                status: "Isporučeno"
-              }
+                status: "Isporučeno",
+              },
             },
             { $unwind: "$itemId" },
             {
@@ -69,25 +74,32 @@ export default async function handler(req, res) {
                 from: "items",
                 localField: "itemId.itemId",
                 foreignField: "_id",
-                as: "item"
-              }
+                as: "item",
+              },
             },
             { $unwind: "$item" },
             {
               $group: {
-                _id: "$item.category_id", // Category ID as string
+                _id: "$item.category_id", // category_id je string
                 totalQuantity: { $sum: "$itemId.quantity" },
-                totalRevenue: { $sum: { $multiply: ["$itemId.quantity", "$item.price"] } },
-                orderDate: { $first: "$orderDate" }
-              }
+                totalRevenue: {
+                  $sum: { $multiply: ["$itemId.quantity", "$item.price"] },
+                },
+                orderDate: { $first: "$orderDate" },
+              },
+            },
+            {
+              $addFields: {
+                categoryObjectId: { $toObjectId: "$_id" }, // Konverzija string category_id u ObjectId
+              },
             },
             {
               $lookup: {
                 from: "categories",
-                localField: "_id",
+                localField: "categoryObjectId",
                 foreignField: "_id",
-                as: "category"
-              }
+                as: "category",
+              },
             },
             { $unwind: "$category" },
             {
@@ -96,9 +108,11 @@ export default async function handler(req, res) {
                 categoryName: "$category.name",
                 totalQuantity: 1,
                 totalRevenue: { $round: ["$totalRevenue", 2] },
-                orderDate: { $dateToString: { format: "%Y-%m-%d", date: "$orderDate" } }
-              }
-            }
+                orderDate: {
+                  $dateToString: { format: "%Y-%m-%d", date: "$orderDate" },
+                },
+              },
+            },
           ])
           .toArray();
       } else {

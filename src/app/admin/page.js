@@ -26,6 +26,7 @@ const Admin = () => {
   const [itemPrice, setItemPrice] = useState("");
   const [selectedGender, setSelectedGender] = useState("");
   const [selectedCategoryForItem, setSelectedCategoryForItem] = useState("");
+  const [amount, setAmount] = useState("");
 
   // const [selectedUser, setSelectedUser] = useState("");
   const [itemImage, setItemImage] = useState(null);
@@ -37,6 +38,7 @@ const Admin = () => {
   const [editItemPrice, setEditItemPrice] = useState("");
   const [editItemCategoryId, setEditItemCategoryId] = useState("");
   const [editItemGenderId, setEditItemGenderId] = useState("");
+  const [editItemAmount, setEditItemAmount] = useState("");
 
   const [items, setItems] = useState([]);
 
@@ -262,6 +264,7 @@ const Admin = () => {
     formData.append("gender_id", selectedGender);
     // formData.append("user_id", selectedUser);
     formData.append("image", itemImage);
+    formData.append('amount', amount);
 
     try {
       const response = await fetch("/api/items", {
@@ -300,6 +303,7 @@ const Admin = () => {
     setSelectedGender("");
     // setSelectedUser("");
     setItemImage(null);
+    setAmount("");
   };
 
   const handleItem = async (itemId) => {
@@ -336,6 +340,7 @@ const Admin = () => {
     setEditItemName(item.name); 
     setEditItemSize(item.size);
     setEditItemPrice(item.price);
+    setEditItemAmount(item.amount);
     setEditItemCategoryId(item.category_id);
     setEditItemGenderId(item.gender_id);
 
@@ -356,6 +361,7 @@ const Admin = () => {
           price: editItemPrice,
           category_id: editItemCategoryId,
           gender_id: editItemGenderId,
+          amount: editItemAmount
         }),
       });
 
@@ -373,6 +379,7 @@ const Admin = () => {
                 price: editItemPrice,
                 category_id: editItemCategoryId,
                 gender_id: editItemGenderId,
+                amount: editItemAmount
               }
             : item
         )
@@ -561,6 +568,7 @@ const Admin = () => {
                         <th scope="col">Ime</th>
                         <th scope="col">Cijena</th>
                         <th scope="col">Veličina</th>
+                        <th scope="col">Na stanju</th>
                         <th scope="col">Kategorija</th>
                         <th scope="col">Spol</th>
                         <th scope="col">Izbrisi</th>
@@ -574,6 +582,7 @@ const Admin = () => {
                           <td>{item.name}</td>
                           <td>{item.price}</td>
                           <td>{item.size}</td>
+                          <td>{item.amount}</td>
                           <td>{item.category_name}</td>
                           <td>{item.gender_name}</td>
                           <td>
@@ -670,6 +679,23 @@ const Admin = () => {
                               aria-describedby="inputGroup-sizing-sm"
                               value={itemPrice}
                               onChange={(e) => setItemPrice(e.target.value)}
+                              required
+                            />
+                          </div>
+                          <div className="input-group input-group-sm mb-3 mt-3">
+                            <span
+                              className="input-group-text"
+                              id="inputGroup-sizing-sm"
+                            >
+                              Na stanju
+                            </span>
+                            <input
+                              type="number"
+                              className="form-control"
+                              aria-label="Sizing example input"
+                              aria-describedby="inputGroup-sizing-sm"
+                              value={amount}
+                              onChange={(e) => setAmount(e.target.value)}
                               required
                             />
                           </div>
@@ -865,6 +891,18 @@ const Admin = () => {
                     id="editItemPrice"
                     value={editItemPrice}
                     onChange={(e) => setEditItemPrice(e.target.value)}
+                  />
+                </div>
+                <div className="mb-3">
+                  <label htmlFor="editItemPrice" className="col-form-label">
+                    Na stanju:
+                  </label>
+                  <input
+                    type="number"
+                    className="form-control"
+                    id="editItemPrice"
+                    value={editItemAmount}
+                    onChange={(e) => setEditItemAmount(e.target.value)}
                   />
                 </div>
                 <div className="mb-3">

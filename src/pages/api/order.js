@@ -10,20 +10,22 @@ export default async function handler(req, res) {
       const client = await clientPromise;
       const db = client.db("sporthub");
 
-  
       const cartCollection = db.collection("cart");
       const ordersCollection = db.collection("orders");
+      const itemsCollection = db.collection("items");
 
+      // Pronađi stavke iz košarice korisnika
       const cartItems = await cartCollection
         .find({ userId: new ObjectId(userId) })
         .toArray();
 
-    
+      // Mapiraj stavke narudžbe
       const orderItems = cartItems.map((item) => ({
         itemId: item.itemId,
         quantity: item.quantity,
       }));
 
+      // Kreiraj podatke narudžbe
       const orderData = {
         userId: new ObjectId(userId),
         email,
@@ -37,17 +39,36 @@ export default async function handler(req, res) {
         status: "U tijeku",
       };
 
-
+      // Ubaci narudžbu u kolekciju narudžbi
       const result = await ordersCollection.insertOne(orderData);
 
-   
+      // Prođi kroz svaki artikl u narudžbi i ažuriraj stanje
+      for (let item of cartItems) {
+        const productId = new ObjectId(item.itemId);
+        const quantity = item.quantity;
+      
+        console.log(`Ažuriranje proizvoda s ID-em ${productId}: smanjenje količine za ${quantity}`);
+      
+        const updateResult = await itemsCollection.updateOne(
+          { _id: productId, amount: { $gt: 0 } },
+          { $inc: { amount: -quantity } }
+        );
+      
+        console.log(`Update result: ${JSON.stringify(updateResult)}`);
+        if (updateResult.modifiedCount === 0) {
+          console.error(`Stavka s ID-em ${productId} nije ažurirana. Možda količina nije dovoljna ili stavka ne postoji.`);
+        }
+      }
+
+      // Izbriši stavke iz košarice nakon što je narudžba potvrđena
       await cartCollection.deleteMany({ userId: new ObjectId(userId) });
 
+      // Pošalji uspješan odgovor
       res.status(201).json({ message: "Narudžba uspješno poslana", orderData });
     } catch (error) {
       res.status(500).json({
         message: "Došlo je do greške prilikom stvaranja narudžbe",
-        error,
+        error: error.message,
       });
     }
   } else if (req.method === "GET") {
@@ -85,8 +106,7 @@ export default async function handler(req, res) {
       res.status(500).json({ message: "Interna serverska greška" });
     }
     
-  } 
-  else if (req.method === "PATCH") {
+  } else if (req.method === "PATCH") {
     try {
       const { orderId, status } = req.body;
       if (!orderId || !status) {
@@ -111,7 +131,7 @@ export default async function handler(req, res) {
       console.error("Error updating order:", error);
       res.status(500).json({ error: error.message });
     }
-  }else {
+  } else {
     res.status(405).json({ message: "Metoda nije dopuštena" });
   }
 }

@@ -71,12 +71,15 @@ export default function Mens() {
           body: JSON.stringify({ itemId, userId }),
         });
 
-        if (!response.ok) {
-          throw new Error("Failed to add item to cart");
-        }
+      
 
         const data = await response.json();
-        alert(data.message);
+        if (response.ok) {
+          alert(data.message); // Uspješno dodan u košaricu
+        } else {
+          alert(data.message); // Prikazuje poruku o grešci
+        }
+       
       } else {
         let cart = JSON.parse(localStorage.getItem("guestCart")) || [];
         const existingItem = cart.find((item) => item.itemId === itemId);
@@ -185,7 +188,10 @@ export default function Mens() {
   return (
     <div>
       <Navigation />
-      <div className="container container-bottom"  style={{ marginBottom: "100px" }}>
+      <div
+        className="container container-bottom"
+        style={{ marginBottom: "100px" }}
+      >
         <h1 className="mt-3 text-center">Ponuda za muškarce</h1>
 
         <div className="text-center mt-3">
@@ -285,16 +291,20 @@ export default function Mens() {
                                 Cijena: {item.price} €
                               </p>
                               <div className="d-flex justify-content-center">
-                                <button
-                                  className="btn btn-sm"
-                                  onClick={() => addToCart(item._id)}
-                                >
-                                  <img
-                                    src="./cart.png"
-                                    className="icon-cart"
-                                    alt="Dodaj u košaricu"
-                                  />
-                                </button>
+                                {item.amount <= 0 ? (
+                                  <p className="text-danger">Nema na stanju</p>
+                                ) : (
+                                  <button
+                                    className="btn btn-sm"
+                                    onClick={() => addToCart(item._id)}
+                                  >
+                                    <img
+                                      src="./cart.png"
+                                      className="icon-cart"
+                                      alt="Dodaj u košaricu"
+                                    />
+                                  </button>
+                                )}
                               </div>
 
                               <button
@@ -306,8 +316,12 @@ export default function Mens() {
                                 Napiši recenziju
                               </button>
                               <button className="btn btn-primary btn-sm w-100 mt-2">
-                                <a className="text-light"  href={`/reviews?itemId=${item._id}`}>Prikazi recenzije</a>
-                                
+                                <a
+                                  className="text-light"
+                                  href={`/reviews?itemId=${item._id}`}
+                                >
+                                  Prikazi recenzije
+                                </a>
                               </button>
                             </div>
                           </div>
@@ -335,7 +349,7 @@ export default function Mens() {
         )}
 
         {reviewItemId && (
-          <div className="review-form mt-4"  style={{ marginBottom: "200px" }}>
+          <div className="review-form mt-4" style={{ marginBottom: "200px" }}>
             <h3>Napiši recenziju</h3>
             <div className="mb-3">
               <label htmlFor="review-text" className="form-label">

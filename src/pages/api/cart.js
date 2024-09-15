@@ -7,7 +7,10 @@ export default async function handler(req, res) {
       const client = await clientPromise;
       const db = client.db("sporthub");
       const cartCollection = db.collection("cart");
+      const itemsCollection = db.collection("items");
       const { itemId, userId } = req.body;
+
+      const item = await itemsCollection.findOne({ _id: new ObjectId(itemId) });
 
       console.log(userId, itemId);
       if (!itemId || !userId) {
@@ -20,11 +23,17 @@ export default async function handler(req, res) {
       });
 
       if (cartItem) {
+        if (item.amount < cartItem.quantity + 1) {
+          return res.status(400).json({ message: "Nema na stanju ovog artikla vise" });
+        }
         await cartCollection.updateOne(
           { _id: cartItem._id },
           { $inc: { quantity: 1 } }
         );
       } else {
+        if (item.amount < 1) {
+          return res.status(400).json({ message: "Not enough stock available" });
+        }
         await cartCollection.insertOne({
           userId: new ObjectId(userId),
           itemId: new ObjectId(itemId),
@@ -105,6 +114,8 @@ export default async function handler(req, res) {
           .find({ _id: { $in: itemIds } })
           .toArray();
   
+         
+
         const categoryIds = items.map((item) => item.category_id);
         const categories = await categoriesCollection
           .find({ _id: { $in: categoryIds.map((id) => new ObjectId(id)) } })

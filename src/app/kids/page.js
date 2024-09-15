@@ -71,12 +71,12 @@ export default function Mens() {
           body: JSON.stringify({ itemId, userId }),
         });
 
-        if (!response.ok) {
-          throw new Error("Failed to add item to cart");
-        }
-
         const data = await response.json();
-        alert(data.message);
+        if (response.ok) {
+          alert(data.message); // Uspješno dodan u košaricu
+        } else {
+          alert(data.message); // Prikazuje poruku o grešci
+        }
       } else {
         let cart = JSON.parse(localStorage.getItem("guestCart")) || [];
         const existingItem = cart.find((item) => item.itemId === itemId);
@@ -186,7 +186,7 @@ export default function Mens() {
     <div>
       <Navigation />
       <div className="container container-bottom"  style={{ marginBottom: "100px" }}>
-        <h1 className="mt-3 text-center">Ponuda za muškarce</h1>
+        <h1 className="mt-3 text-center">Ponuda za djecu</h1>
 
         <div className="text-center mt-3">
           <label className="me-2">Pretraži po nazivu:</label>
@@ -285,16 +285,20 @@ export default function Mens() {
                                 Cijena: {item.price} €
                               </p>
                               <div className="d-flex justify-content-center">
-                                <button
-                                  className="btn btn-sm"
-                                  onClick={() => addToCart(item._id)}
-                                >
-                                  <img
-                                    src="./cart.png"
-                                    className="icon-cart"
-                                    alt="Dodaj u košaricu"
-                                  />
-                                </button>
+                                {item.amount <= 0 ? (
+                                  <p className="text-danger">Nema na stanju</p>
+                                ) : (
+                                  <button
+                                    className="btn btn-sm"
+                                    onClick={() => addToCart(item._id)}
+                                  >
+                                    <img
+                                      src="./cart.png"
+                                      className="icon-cart"
+                                      alt="Dodaj u košaricu"
+                                    />
+                                  </button>
+                                )}
                               </div>
 
                               <button

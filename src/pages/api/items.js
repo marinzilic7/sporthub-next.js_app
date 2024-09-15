@@ -35,7 +35,7 @@ export default async function handler(req, res) {
     try {
       const { fields, files } = await parseForm(req);
 
-      const { name, size, price, category_id, gender_id, user_id } = fields;
+      const { name, size, price, amount, category_id, gender_id, user_id } = fields;
       const image = files.image;
 
       if (Array.isArray(image) && image.length > 0) {
@@ -52,6 +52,7 @@ export default async function handler(req, res) {
             size: fields.size[0],
             price: parseFloat(price),
             category_id: fields.category_id[0],
+            amount: parseFloat(amount),
             gender_id: fields.gender_id[0],
             fajlPath: firstImage.filepath,
           };
@@ -134,9 +135,9 @@ export default async function handler(req, res) {
       });
 
       if (result.deletedCount === 1) {
-        res.status(200).json({ message: "Kategorija uspješno izbrisana" });
+        res.status(200).json({ message: "Artikl uspješno izbrisana" });
       } else {
-        res.status(404).json({ message: "Kategorija nije pronađena" });
+        res.status(404).json({ message: "Artikl nije pronađen" });
       }
     } catch (error) {
       console.error("Greška prilikom brisanja kategorije:", error);
@@ -151,12 +152,12 @@ export default async function handler(req, res) {
         return res.status(400).json({ message: "Invalid JSON" });
       }
 
-      const { name, size, price, category_id, gender_id } = req.body;
+      const { name, size, price, category_id, gender_id,amount } = req.body;
       console.log("OVO JE IME", name);
 
       try {
         const itemsCollection = db.collection("items");
-
+        const amountInt = parseInt(amount, 10);
         const updatedItem = await itemsCollection.findOneAndUpdate(
           { _id: new ObjectId(itemId) },
           {
@@ -164,8 +165,9 @@ export default async function handler(req, res) {
               name,
               size,
               price,
-              category_id: new ObjectId(category_id),
-              gender_id: new ObjectId(gender_id),
+              category_id: category_id,
+              gender_id: gender_id,
+              amount:amountInt 
             },
           },
           { returnOriginal: false }
