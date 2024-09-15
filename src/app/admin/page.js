@@ -8,6 +8,8 @@ import { bottom } from "@popperjs/core";
 import { Familjen_Grotesk } from "next/font/google";
 import useSWR from "swr";
 import Order from "../order/page";
+import Report from "../components/Report.js"; 
+
 const Admin = () => {
   const fetcher = (url) => fetch(url).then((res) => res.json());
   const { data, error, mutate } = useSWR("/api/items", fetcher);
@@ -755,6 +757,8 @@ const Admin = () => {
               </div>
             </div>
             <Order_comp />
+            <Report/>
+            
           </div>
          
         </div>
